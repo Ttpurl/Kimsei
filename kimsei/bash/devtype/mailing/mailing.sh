@@ -16,7 +16,7 @@ read choice
 
 if [ $choice -eq 1 ]; then
 clear
-    sudo mailing/./mailinabox.sh
+    curl -s https://mailinabox.email/setup.sh | sudo bash
 elif [ $choice -eq 2 ]; then
 clear
     sudo

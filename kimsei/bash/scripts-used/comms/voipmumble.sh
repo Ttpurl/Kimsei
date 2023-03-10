@@ -1,23 +1,8 @@
 #!/bin/bash
-echo "Select a deployment service:"
-echo "1. VoIP Server (Mumble)"
-echo "This script allows you to set up a VoIP server to use"
-echo "for work or with friends. It has many features"
-echo "for you or for your network. Brought to you by Mumble."
-echo "##################################################################"
-echo "2. "
-echo "3. "
-echo "4. "
-echo "5. "
-echo "6. "
-echo "7. "
-echo "8. "
-
-read choice
-
-if [ $choice -eq 1 ]; then
-clear
-echo "Welcome to the VoIP installation."
+#This script was made by txr8v9s2ytg7xr.us
+#Link to website: https://txr8v9s2ytg7xr.us/
+#This script is meant to set up a working VoIP server that is protected by a password
+echo "Welcome to the VoIP installation script by txr8v9s2ytg7xr.us!"
 sleep 1.0
 clear
 #Updating Repositories (0/1)
@@ -168,7 +153,7 @@ pidfile=/run/mumble-server/mumble-server.pid
 # Welcome message sent to clients when they connect.
 # If the welcome message is set to an empty string,
 # no welcome message will be sent to clients.
-#welcometext=<br />Welcome to this VoIP server made by a script made by<b>Kimsei.com!</b>.<br />Enjoy your stay!<br />
+#welcometext=<br />Welcome to this VoIP server made by a script made by<b>txr8v9s2ytg7xr.us</b>.<br />Enjoy your stay!<br />
 
 # Port to bind TCP and UDP sockets to.
 port=$voipport
@@ -442,28 +427,3 @@ sudo service mumble-server restart
 clear
 #Installing Mumble (3/3)
 echo "Script is completed! Enjoy your new VoIP server! Note: to change the config of the mumble-server, go to /etc/mumble-server.ini"
-elif [ $choice -eq 2 ]; then
-clear
-    sudo
-elif [ $choice -eq 3 ]; then
-clear
-    sudo
-elif [ $choice -eq 4 ]; then
-clear
-    sudo
-elif [ $choice -eq 5 ]; then
-clear
-    sudo
-elif [ $choice -eq 6 ]; then
-clear
-    sudo
-elif [ $choice -eq 7 ]; then
-clear
-    sudo
-elif [ $choice -eq 8 ]; then
-clear
-    cd ..
-    sudo menu/menu.sh
-else
-    echo "Invalid choice. Please select a valid option."
-fi
