@@ -8,34 +8,26 @@ sudo chmod +x ./kimsei.sh
 cd bash/devtype/
 # Web Dev
 cd webdev/
-sudo chmod +x ./webdev.sh
-sudo chmod +x ./apachewebserverssl.sh
-sudo chmod +x ./nginxwebserverssl.sh
+sudo chmod +x $PWD/./webdev.sh
 # Server Services
 cd ../serverservices/
-sudo chmod +x ./serverservices.sh
-sudo chmod +x ./ntp.sh
-sudo chmod +x ./pihole.sh
-sudo chmod +x ./torproxy.sh
+sudo chmod +x $PWD/./serverservices.sh
 # Comms
 cd ../comms/
-sudo chmod +x ./comms.sh
-sudo chmod +x ./voipmumble.sh
+sudo chmod +x $PWD/./comms.sh
 # Encryption 
 cd ../encryption/
-sudo chmod +x ./encryption.sh
+sudo chmod +x $PWD/./encryption.sh
 # Mailing
 cd ../mailing
-sudo chmod +x ./mailing.sh
-sudo chmod +x mailinabox.sh
+sudo chmod +x $PWD/./mailing.sh
 # Server Lockdown
 cd ../serverlockdown
-sudo chmod +x ./serverlockdown.sh
+sudo chmod +x $PWD/./serverlockdown.sh
 # VPN
 cd ../vpn
-sudo chmod +x ./vpn.sh
+sudo chmod +x $PWD/./vpn.sh
 # Automation
 cd ../automation
-sudo chmod +x ./automation.sh
-clear
+sudo chmod +x $PWD/./automation.sh
 echo "The script is ready to go! You can now run sudo ./kimsei.sh to get started!"

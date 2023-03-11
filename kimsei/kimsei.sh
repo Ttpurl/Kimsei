@@ -17,7 +17,7 @@ files=("$file1" "$file2" "$file3" "$file4" "$file5" "$file6" "$file7" "$file8")
 
 # Loop through the array and check each file for executability
 for file in "${files[@]}"; do
-    if [ -x "$file" ]; then
+    if [ -x "$files" ]; then
         echo "Core files are in order. Proceding with script."
         # Checks are good. Running script
         echo "Please select a development type:"
