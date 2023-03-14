@@ -3,7 +3,9 @@
           2 "Nginx Web Server (SSL)"
           3 "Apache Web Server (No SSL)"
           4 "Nginx Web Server (No SSL)"
-          5 "Exit")
+          5 "Apache Web Server .Onion"
+          6 "Nginx Web Server .Onion"
+          7 "Exit")
 
             CHOICE=$(dialog --clear \
                             --title "Webdev" \
@@ -195,6 +197,60 @@ echo "Your Nginx web server is complete! visit the IP address of this machine or
 sleep 1.5
                     ;;
                 5)
+                clear
+                    # Install Apache and Tor
+                    sudo apt-get update
+                    sudo apt-get install apache2 tor -y
+
+                    # Configure Tor Hidden Service
+                    sudo sh -c 'echo "HiddenServiceDir /var/lib/tor/hidden_service/" >> /etc/tor/torrc'
+                    sudo sh -c 'echo "HiddenServicePort 80 127.0.0.1:80" >> /etc/tor/torrc'
+                    sudo service tor restart
+
+                    # Obtain the Onion URL
+                    ONION_URL=$(sudo cat /var/lib/tor/hidden_service/hostname)
+
+                    # Configure Apache Server
+                    sudo sh -c 'echo "ServerName $ONION_URL" >> /etc/apache2/apache2.conf'
+                    sudo service apache2 restart
+
+                    # Display Onion URL and file location
+                    echo "Apache server is now running with Onion URL: $ONION_URL"
+                    echo "Front end HTML files are located in /var/www/html/"
+                    sleep 5.0
+                    ;;
+                6)
+                    # Install Nginx and Tor
+                    sudo apt-get update
+                    sudo apt-get install nginx tor -y
+
+                    # Configure Tor Hidden Service
+                    sudo sh -c 'echo "HiddenServiceDir /var/lib/tor/hidden_service/" >> /etc/tor/torrc'
+                    sudo sh -c 'echo "HiddenServicePort 80 127.0.0.1:80" >> /etc/tor/torrc'
+                    sudo service tor restart
+
+                    # Obtain the Onion URL
+                    ONION_URL=$(sudo cat /var/lib/tor/hidden_service/hostname)
+
+                    # Configure Nginx Server
+                    sudo sh -c 'echo "server {
+                        listen 80;
+                        server_name $ONION_URL;
+
+                        location / {
+                            root /var/www/html/;
+                            index index.html;
+                        }
+                    }" > /etc/nginx/sites-available/onion'
+                    sudo ln -s /etc/nginx/sites-available/onion /etc/nginx/sites-enabled/
+                    sudo service nginx restart
+
+                    # Display Onion URL and file location
+                    echo "Nginx server is now running with Onion URL: $ONION_URL"
+                    echo "Front end HTML files are located in /var/www/html/"
+                    sleep 5.0
+                    ;;
+                7)  
                     exit
                     ;;
 

@@ -21,17 +21,19 @@ while true; do
     # Process menu selection
     case $CHOICE in
         1)
-            # Set the dialog colors and font
-            export DIALOGRC=/path/to/dialog.rc
+        # Set the dialog colors and font
+        export DIALOGRC=/path/to/dialog.rc
 
-            # Define the text to display
-            TEXT="Pwndrop is a self-deployable file hosting service specially developed for red teamers, allowing them to easily upload and transfer payloads over HTTP and WebDAV."
+        # Define the text to display
+        TEXT="Pwndrop is a self-deployable file hosting service
+            specially developed for red teamers,
+            allowing them to easily upload and transfer payloads over HTTP and WebDAV."
 
-            # Use ncurses to create the text display
-            echo "$TEXT" | dialog --programbox 20 50
+        # Use dialog to display the text in a textbox
+        dialog --title "Pwndrop" --textbox /dev/stdin 50 50 <<< "$TEXT"
 
             # Use dialog to ask the user yes or no
-            dialog --yesno "Do you want to install?" 10 30
+            dialog --yesno "Do you want to install?" 15 30
 
             # Check the dialog exit code to see if the user selected yes or no
             if [ $? -eq 0 ]; then
