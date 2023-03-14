@@ -1,5 +1,4 @@
 #!/bin/bash
-echo "Checking if the script is working..."
 # Checking core files
 file1="bash/devtype/webdev/webdev.sh"
 file2="bash/devtype/serverservices/serverservices.sh"
@@ -9,9 +8,10 @@ file5="bash/devtype/automation/automation.sh"
 file6="bash/devtype/encryption/encryption.sh"
 file7="bash/devtype/mailing/mailing.sh"
 file8="bash/devtype/serverlockdown/serverlockdown.sh"
+file9="bash/devtype/hackingtools/hackingtools.sh"
 
 # Defining array of files
-files=("$file1" "$file2" "$file3" "$file4" "$file5" "$file6" "$file7" "$file8")
+files=("$file1" "$file2" "$file3" "$file4" "$file5" "$file6" "$file7" "$file8" "$file9")
 
 # Loop through the array and check each file for executability
 for file in "${files[@]}"; do
@@ -27,13 +27,14 @@ for file in "${files[@]}"; do
                      6 "Encryption"
                      7 "Mailing"
                      8 "Server Hardening"
-                     9 "Exit")
+                     9 "Hacking Tools"
+                     10 "Exit")
 
             # Get menu selection
             CHOICE=$(dialog --clear \
                             --title "Kimsei" \
                             --menu "Choose an option:" \
-                            15 40 4 \
+                            25 35 15 \
                             "${OPTIONS[@]}" \
                             2>&1 >/dev/tty)
 
@@ -64,7 +65,10 @@ for file in "${files[@]}"; do
                     sudo bash/devtype/serverlockdown/./serverlockdown.sh
                     ;;
                 9)  
-                clear
+                    sudo bash/devtype/hackingtools/./hackingtools.sh
+                    ;;
+                    10)
+                    clear
                     echo "Exiting Kimsei..."
                     exit
                     ;;
