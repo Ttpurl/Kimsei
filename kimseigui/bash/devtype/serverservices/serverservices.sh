@@ -3,7 +3,7 @@
                      2 "Pi-hole DNS"
                      3 "Tor Proxy Server"
                      4 "Jellyfin"
-                     5 "Coming Soon"
+                     5 "Plex"
                      6 "Coming soon"
                      7 "Back")
 
@@ -603,7 +603,17 @@ sleep 5.0
 
                     ;;
                 5)
-                    exit
+                    # Add the Plex repository key
+curl https://downloads.plex.tv/plex-keys/PlexSign.key | sudo apt-key add -
+
+# Add the Plex repository to the sources list
+echo deb https://downloads.plex.tv/repo/deb public main | sudo tee /etc/apt/sources.list.d/plexmediaserver.list
+
+# Update the package lists
+sudo apt update
+
+# Install Plex Media Server
+sudo apt install plexmediaserver
                     ;;
                 6)
                     exit

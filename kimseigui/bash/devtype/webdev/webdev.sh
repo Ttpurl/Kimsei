@@ -3,7 +3,9 @@
           2 "Nginx Web Server (SSL)"
           3 "Apache Web Server (No SSL)"
           4 "Nginx Web Server (No SSL)"
-          5 "Exit")
+          5 "Apache Web Server (User SSL)"
+          6 ""
+          7 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Webdev" \
@@ -194,7 +196,48 @@ systemctl reload nginx
 echo "Your Nginx web server is complete! visit the IP address of this machine or the domain name if you set up DNS."
 sleep 1.5
                     ;;
+#######################################################################
                 5)
+                sudo apt install apache2 -y
+                    # Get domain name from user
+read -p "Enter domain name: " DOMAIN
+
+# Get SSL certificate and key file paths from user
+read -p "Enter path to SSL .crt file: " CRT_PATH
+read -p "Enter path to SSL .key file: " KEY_PATH
+
+# Create Apache virtual host configuration file
+cat << EOF > /etc/apache2/sites-available/$DOMAIN.conf
+<VirtualHost *:80>
+    ServerName $DOMAIN
+    Redirect permanent / https://$DOMAIN/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName $DOMAIN
+    SSLEngine on
+    SSLCertificateFile $CRT_PATH
+    SSLCertificateKeyFile $KEY_PATH
+    DocumentRoot /var/www/html/$DOMAIN
+</VirtualHost>
+EOF
+
+# Create website directory and index.html file
+mkdir /var/www/html/$DOMAIN
+echo "<html><body><h1>Welcome to $DOMAIN</h1></body></html>" > /var/www/html/$DOMAIN/index.html
+
+# Change ownership of website directory to user running the script
+chown -R $(whoami):$(whoami) /var/www/html/$DOMAIN
+
+# Enable site and SSL module, then restart Apache
+a2ensite $DOMAIN
+a2enmod ssl
+systemctl restart apache2
+                    ;;
+#######################################################################
+                6)
+                    ;;
+                7)
                     exit
                     ;;
 
