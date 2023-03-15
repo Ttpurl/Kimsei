@@ -2,7 +2,7 @@
 while true; do
     # Define menu options
     OPTIONS=(1 "Auto Update every 6 hours"
-             2 "Sudo logger"
+             2 "Coming Soon"
              3 "Coming Soon"
              4 "Coming Soon"
              5 "Coming Soon"
@@ -12,7 +12,7 @@ while true; do
 
     # Get menu selection
     CHOICE=$(dialog --clear \
-                    --title "Automation" \
+                    --title "Update, Upgrade, and Updatedb" \
                     --menu "Choose an option:" \
                     15 40 4 \
                     "${OPTIONS[@]}" \
@@ -21,23 +21,10 @@ while true; do
     # Process menu selection
     case $CHOICE in
         1)
-        #Create Cron
-        echo "0 */6 * * * sudo apt-get update && sudo apt-get -y upgrade && sudo updatedb" > /tmp/cronjob
-
-        # Install the new cron job
-        crontab /tmp/cronjob
-
-        # Clean up the temporary file
-        rm /tmp/cronjob
-            echo "Success! The autoupdater is now working!"
-            echo "Note: If the machine restarts, you can run this service again to re enable the script!"
-            sleep 3.0
+            exit
             ;;
         2)
-            screen -dmS Autoupdate-Kimsei bash -c 'cd $PWD/py/logging && pip3 install -r requirements.txt && sudo python3 sudolog.py'
-            echo "Success! The autologger is now working!"
-            echo "Note: If the machine restarts, you can run this service again to re enable the script!"
-            sleep 3.0
+            exit
             ;;
         3)
             exit

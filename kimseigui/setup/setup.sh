@@ -20,9 +20,6 @@ sudo chmod +x $PWD/./serverservices.sh
 # Comms
 cd ../comms/
 sudo chmod +x $PWD/./comms.sh
-# Hacking Tools
-cd ../hackingtools/
-sudo chmod +x $PWD/./hackingtools.sh
 # Encryption 
 cd ../encryption/
 sudo chmod +x $PWD/./encryption.sh
