@@ -4,7 +4,7 @@
                      3 "Tor Proxy Server"
                      4 "Jellyfin"
                      5 "Plex"
-                     6 "Coming soon"
+                     6 "XRDP"
                      7 "Back")
 
             CHOICE=$(dialog --clear \
@@ -616,7 +616,37 @@ sudo apt update
 sudo apt install plexmediaserver
                     ;;
                 6)
-                    exit
+                clear
+                echo "Installing Xrdp now..."
+                2.0
+                    # Install xrdp and ssl-cert packages
+sudo apt-get update
+sudo apt-get install xrdp ssl-cert -y
+
+# Add user to ssl-cert group
+sudo usermod -aG ssl-cert $USER
+
+# Add xrdp to ssl-cert group
+sudo adduser xrdp ssl-cert
+
+# Enable xrdp service
+sudo systemctl enable xrdp
+
+# Prompt user to allow xrdp port in UFW
+read -p "Do you want to allow the xrdp port in UFW? (y/n) " choice
+
+if [ "$choice" = "y" ]; then
+    # Allow xrdp port in UFW
+    sudo ufw allow 3389
+    echo "xrdp port allowed in UFW."
+else
+    echo "xrdp port not allowed in UFW."
+fi
+
+# Restart xrdp service
+sudo systemctl restart xrdp
+echo "Success! Xrdp is installed."
+sleep 4.0
                     ;;
                 7)
                     exit

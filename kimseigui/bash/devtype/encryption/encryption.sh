@@ -18,6 +18,9 @@ while true; do
     case $CHOICE in
         1)
             # Add the Veracrypt repository
+            clear
+            echo "Installing Veracrypt now..."
+            sleep 1.0
 sudo add-apt-repository ppa:unit193/encryption
 
 # Update the package list
@@ -25,6 +28,9 @@ sudo apt-get update
 
 # Install Veracrypt
 sudo apt-get install veracrypt
+clear
+echo "Veracrypt is installed!"
+sleep 4.0
             ;;
         2)
             exit
