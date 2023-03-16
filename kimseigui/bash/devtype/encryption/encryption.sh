@@ -17,7 +17,14 @@ while true; do
     # Process menu selection
     case $CHOICE in
         1)
-            exit
+            # Add the Veracrypt repository
+sudo add-apt-repository ppa:unit193/encryption
+
+# Update the package list
+sudo apt-get update
+
+# Install Veracrypt
+sudo apt-get install veracrypt
             ;;
         2)
             exit
