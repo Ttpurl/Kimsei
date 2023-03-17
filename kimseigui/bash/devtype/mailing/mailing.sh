@@ -1,7 +1,7 @@
 #!/bin/bash
 while true; do
     # Define menu options
-    OPTIONS=(1 "Mailinabox"
+    OPTIONS=(1 "Mailinabox (Ubuntu 22.04)"
              2 "Coming Soon"
              3 "Coming Soon"
              4 "Back")

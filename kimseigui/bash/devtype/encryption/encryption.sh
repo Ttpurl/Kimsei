@@ -2,7 +2,7 @@
 while true; do
     # Define menu options
     OPTIONS=(1 "Install Veracrypt"
-             2 "Create an encrypted file (VC REQUIRED)"
+             2 "Coming Soon"
              3 "Coming Soon"
              4 "Back")
 

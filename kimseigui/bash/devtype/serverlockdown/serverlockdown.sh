@@ -1,5 +1,5 @@
 #!/bin/bash
-            OPTIONS=(1 "SSH Setup"
+            OPTIONS=(1 "SSH Setup (Fail2Ban)"
                      2 "Coming Soon"
                      3 "Coming Soon"
                      4 "Coming Soon"
@@ -17,6 +17,9 @@
             # Process menu selection
             case $CHOICE in
                 1)
+                    sudo apt-get update
+                    sudo apt install ssh -y
+                    sudo apt install fail2ban -y
                     echo
                     echo "Enter your public SSH key (Leave blank if you don't want public key authentication set up): " 
 read ssh_key #set var ssh pub key
