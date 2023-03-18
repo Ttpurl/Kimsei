@@ -1,10 +1,10 @@
 #!/bin/bash
  OPTIONS=(1 "Apache Web Server (SSL)"
-          2 "Nginx Web Server (SSL)"
+          2 "Nginx Web Server WIP (SSL)"
           3 "Apache Web Server (No SSL)"
-          4 "Nginx Web Server (No SSL)"
+          4 "Nginx Web Server WIP (No SSL)"
           5 "Apache Web Server (User SSL)"
-          6 ""
+          6 "Coming Soon"
           7 "Back")
 
             CHOICE=$(dialog --clear \
@@ -236,6 +236,7 @@ systemctl restart apache2
                     ;;
 #######################################################################
                 6)
+                    exit
                     ;;
                 7)
                     exit

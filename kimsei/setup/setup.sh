@@ -5,9 +5,8 @@ echo "installing and configuring the script now..."
 sleep 1.0
 sudo apt update
 if ! dpkg -s libncurses5-dev &> /dev/null; then
-  sudo apt-get install -y libncurses5-dev
+  sudo apt-get install libncurses5-dev ncurses-term dialog -y
 fi
-sudo apt install dialog
 cd ..
 sudo chmod +x ./kimsei.sh
 cd bash/devtype/

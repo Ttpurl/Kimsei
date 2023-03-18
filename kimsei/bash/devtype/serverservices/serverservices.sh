@@ -7,7 +7,7 @@
                      6 "XRDP"
                      7 "Grafana WIP (User SSL)"
                      8 "Snipe IT WIP (User SSL)"
-                     9 "Snipe IT WIP (Certbot)"
+                     9 "Samba Setup"
                      10 "Back")
 
             CHOICE=$(dialog --clear \
@@ -766,48 +766,56 @@ dialog --msgbox "Snipe IT has been successfully installed. The web files are loc
                     ;;
 ####################################################################################################                    
                 9) 
-                    # Install necessary packages
+# Install Samba and ncurses-based configuration tool
 sudo apt-get update
-sudo apt-get install -y apache2 libapache2-mod-php7.4 php7.4-cli php7.4-mysql php7.4-gd php7.4-mbstring php7.4-xml php7.4-curl php7.4-bcmath php7.4-zip mariadb-server mariadb-client git unzip certbot python3-certbot-apache
+sudo apt-get install samba samba-common-bin libpam-smbpass -y
 
-# Set up database
-dbname=$(dialog --inputbox "Enter database name:" 0 0 2>&1 >/dev/tty)
-dbuser=$(dialog --inputbox "Enter database user:" 0 0 2>&1 >/dev/tty)
-dbpass=$(dialog --passwordbox "Enter database password:" 0 0 2>&1 >/dev/tty)
-dbhost=$(dialog --inputbox "Enter database host (optional):" 0 0 2>&1 >/dev/tty)
-sudo mysql -e "CREATE DATABASE $dbname;"
-sudo mysql -e "GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'$dbhost' IDENTIFIED BY '$dbpass';"
+# Get user input for Samba configuration options
+dialog --backtitle "Samba Setup" --title "Samba Share Configuration" --form "Please provide the following information:" 15 60 5 \
+    "Share Name:" 1 1 "" 1 20 40 0 \
+    "Share Path:" 2 1 "" 2 20 40 0 \
+    "Browsable (yes or no):" 3 1 "" 3 20 10 0 \
+    "Guest Access (yes or no):" 4 1 "" 4 20 10 0 \
+    2>/tmp/samba-conf.tmp
 
-# Download and set up Snipe IT
-sudo rm -rf /var/www/snipe-it
-sudo git clone https://github.com/snipe/snipe-it /var/www/snipe-it
-cd /var/www/snipe-it
-sudo git checkout tags/v5.2.2
-sudo cp .env.example .env
-sudo composer install --no-dev --prefer-source
-sudo php artisan key:generate --force
-sudo sed -i "s|DB_DATABASE=snipeit|DB_DATABASE=$dbname|g" .env
-sudo sed -i "s|DB_USERNAME=snipeit|DB_USERNAME=$dbuser|g" .env
-sudo sed -i "s|DB_PASSWORD=snipeit|DB_PASSWORD=$dbpass|g" .env
-sudo sed -i "s|APP_URL=http://localhost|APP_URL=https://localhost|g" .env
+# Parse user input and update Samba configuration file
+SHARENAME=$(cat /tmp/samba-conf.tmp | head -n1)
+SHAREPATH=$(cat /tmp/samba-conf.tmp | head -n2 | tail -n1)
+BROWSABLE=$(cat /tmp/samba-conf.tmp | head -n3 | tail -n1)
+GUESTACCESS=$(cat /tmp/samba-conf.tmp | head -n4 | tail -n1)
 
-# Set up SSL with Certbot
-domain=$(dialog --inputbox "Enter your domain name for SSL certificate:" 0 0 2>&1 >/dev/tty)
-email=$(dialog --inputbox "Enter your email for SSL certificate:" 0 0 2>&1 >/dev/tty)
-sudo certbot --apache --agree-tos --no-eff-email --email $email -d $domain
+if [[ "$BROWSABLE" == "yes" ]]; then
+    BROWSABLE="yes"
+else
+    BROWSABLE="no"
+fi
 
-# Set up Apache
-sudo a2enmod rewrite
-sudo systemctl restart apache2
+if [[ "$GUESTACCESS" == "yes" ]]; then
+    GUESTACCESS="yes"
+else
+    GUESTACCESS="no"
+fi
 
-# Set file permissions
-sudo chown -R www-data:www-data /var/www/snipe-it/public/
-sudo chown -R www-data:www-data /var/www/snipe-it/storage/
-sudo chmod -R 755 /var/www/snipe-it/public/
-sudo chmod -R 755 /var/www/snipe-it/storage/
+echo "[$SHARENAME]" | sudo tee -a /etc/samba/smb.conf
+echo "path = $SHAREPATH" | sudo tee -a /etc/samba/smb.conf
+echo "browsable = $BROWSABLE" | sudo tee -a /etc/samba/smb.conf
+echo "guest ok = $GUESTACCESS" | sudo tee -a /etc/samba/smb.conf
 
-# Display message box
-dialog --msgbox "Snipe IT has been successfully installed with SSL. The web files are located in /var/www/snipe-it/public/" 0 0
+# Get user input for Samba user creation
+dialog --backtitle "Samba Setup" --title "Samba User Creation" --inputbox "Enter a username to be added to Samba:" 8 60 2>/tmp/samba-user.tmp
+
+# Add user to Samba
+SAMBAUSER=$(cat /tmp/samba-user.tmp)
+sudo smbpasswd -a $SAMBAUSER
+
+# Restart Samba service
+sudo service smbd restart
+
+# Clean up temporary files
+rm /tmp/samba-conf.tmp /tmp/samba-user.tmp
+
+# Display final message to user
+dialog --backtitle "Samba Setup" --title "Samba Setup Complete" --msgbox "Samba has been set up with the following configuration:\n\nShare Name: $SHARENAME\nShare Path: $SHAREPATH\nBrowsable: $BROWSABLE\nGuest Access: $GUESTACCESS\n\nUser $SAMBAUSER has been added to Samba." 12 60
                     ;;
 ####################################################################################################                    
                 10)
