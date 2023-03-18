@@ -1,4 +1,4 @@
-!(KimseiV1.0.0.PNG)
+![KimseiV1.0.0.PNG](KimseiV1.0.0.PNG)
 ### Kimsei-Server-Development-Script ###
 ########################################
 ### Made by Kimsei https://kimsei.com ###
