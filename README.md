@@ -2,7 +2,7 @@
 ### Kimsei-Server-Development-Script ###
 
 
-### Made by Kimsei https://kimsei.com ###
+### Made by Kimsei https://kimsei.com (website coming soon)###
 
 
 This multi file bash script is for developing new servers and instances of 
