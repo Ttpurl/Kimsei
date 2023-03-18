@@ -5,7 +5,10 @@
                      4 "Jellyfin"
                      5 "Plex"
                      6 "XRDP"
-                     7 "Back")
+                     7 "Grafana (User SSL)"
+                     8 "Snipe IT (User SSL)"
+                     9 "Snipe IT (Certbot)"
+                     10 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -355,9 +358,11 @@ restrict source notrap nomodify noquery
     sudo service ntp restart
                     ;;
                 2)
+####################################################################################################
                     clear
             curl -sSL https://install.pi-hole.net | PIHOLE_SKIP_OS_CHECK=true sudo -E bash
                     ;;
+####################################################################################################                    
                 3)
                     clear
 echo "Welcome to the Tor proxy installation script"
@@ -579,6 +584,7 @@ clear
 echo "Your Tor proxy is set up! Use a SOCKS5 Proxy to connect!"
 sleep 2.0
                     ;;
+####################################################################################################                    
                 4)
                 clear
                     echo "Welcome to the Jellyfin installer"
@@ -602,6 +608,7 @@ sleep 5.0
 
 
                     ;;
+####################################################################################################
                 5)
                     # Add the Plex repository key
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | sudo apt-key add -
@@ -614,7 +621,15 @@ sudo apt update
 
 # Install Plex Media Server
 sudo apt install plexmediaserver
+echo "Plex is now installed! Go to:"
+echo "                                      "
+echo "     This IP:32400                    "
+echo "          Or                          "
+echo "     localhost:32400                  "
+echo "                                      "
+sleep 5.0
                     ;;
+####################################################################################################
                 6)
                 clear
                 echo "Installing Xrdp now..."
@@ -639,8 +654,12 @@ if [ "$choice" = "y" ]; then
     # Allow xrdp port in UFW
     sudo ufw allow 3389
     echo "xrdp port allowed in UFW."
+    echo "Success! Xrdp is now installed."
+    sleep 5.0
 else
     echo "xrdp port not allowed in UFW."
+    echo "Success! Xrdp is now installed."
+    sleep 5.0
 fi
 
 # Restart xrdp service
@@ -649,6 +668,149 @@ echo "Success! Xrdp is installed."
 sleep 4.0
                     ;;
                 7)
+                    # Install necessary packages
+sudo apt-get update
+sudo apt-get install -y adduser libfontconfig1 dialog
+
+# Get user input for IP address and SSL certificates
+exec 3>&1
+values=$(dialog --ok-label "Install" --backtitle "Grafana Installation" --title "Installation Wizard" \
+--form "\nEnter the following details:" 15 50 0 \
+"IP Address:" 1 1 "" 1 20 30 0 \
+".crt File Path:" 2 1 "" 2 20 30 0 \
+".key File Path:" 3 1 "" 3 20 30 0 \
+2>&1 1>&3)
+exitcode=$?
+exec 3>&-
+if [ $exitcode -ne 0 ]; then
+  echo "Installation canceled."
+  exit 1
+fi
+
+grafana_ip=$(echo "$values" | awk 'NR==1{print $1}')
+grafana_crt=$(echo "$values" | awk 'NR==2{print $1}')
+grafana_key=$(echo "$values" | awk 'NR==3{print $1}')
+
+# Create a directory for SSL certificates
+sudo mkdir /etc/grafana/ssl/
+
+# Copy SSL certificates to the directory
+sudo cp $grafana_crt /etc/grafana/ssl/
+sudo cp $grafana_key /etc/grafana/ssl/
+
+# Change ownership of the SSL certificates
+sudo chown -R grafana:grafana /etc/grafana/ssl/
+
+# Configure Grafana to use SSL and listen on port 443
+sudo sed -i '/;protocol = http/a protocol = https\nhttp_port = 443\nhttps_port = 443\nssl_cert_path = /etc/grafana/ssl/'$(basename $grafana_crt)'\nssl_key_path = /etc/grafana/ssl/'$(basename $grafana_key)'' /etc/grafana/grafana.ini
+
+# Configure Grafana to listen on the specified IP address
+sudo sed -i '/;http_addr =/c http_addr = '${grafana_ip}'' /etc/grafana/grafana.ini
+
+# Enable and start Grafana service
+sudo systemctl enable grafana-server.service
+sudo systemctl start grafana-server.service
+
+# Output instructions to access Grafana
+dialog --backtitle "Grafana Installation" --title "Installation Complete" \
+--msgbox "Grafana has been successfully installed and configured.\n\nYou can access Grafana at https://${grafana_ip}:443" 10 50
+                    ;;
+####################################################################################################                    
+                8)
+                    # Install necessary packages
+sudo apt-get update
+sudo apt-get install -y apache2 libapache2-mod-php7.4 php7.4-cli php7.4-mysql php7.4-gd php7.4-mbstring php7.4-xml php7.4-curl php7.4-bcmath php7.4-zip mariadb-server mariadb-client git unzip
+
+# Set up database
+dbname=$(dialog --inputbox "Enter database name:" 0 0 2>&1 >/dev/tty)
+dbuser=$(dialog --inputbox "Enter database user:" 0 0 2>&1 >/dev/tty)
+dbpass=$(dialog --passwordbox "Enter database password:" 0 0 2>&1 >/dev/tty)
+dbhost=$(dialog --inputbox "Enter database host (optional):" 0 0 2>&1 >/dev/tty)
+sudo mysql -e "CREATE DATABASE $dbname;"
+sudo mysql -e "GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'$dbhost' IDENTIFIED BY '$dbpass';"
+
+# Download and set up Snipe IT
+sudo rm -rf /var/www/snipe-it
+sudo git clone https://github.com/snipe/snipe-it /var/www/snipe-it
+cd /var/www/snipe-it
+sudo git checkout tags/v5.2.2
+sudo cp .env.example .env
+sudo composer install --no-dev --prefer-source
+sudo php artisan key:generate --force
+sudo sed -i "s|DB_DATABASE=snipeit|DB_DATABASE=$dbname|g" .env
+sudo sed -i "s|DB_USERNAME=snipeit|DB_USERNAME=$dbuser|g" .env
+sudo sed -i "s|DB_PASSWORD=snipeit|DB_PASSWORD=$dbpass|g" .env
+sudo sed -i "s|APP_URL=http://localhost|APP_URL=https://localhost|g" .env
+
+# Set up SSL
+certfile=$(dialog --filedialog "Select SSL certificate file:" 0 0 2>&1 >/dev/tty)
+keyfile=$(dialog --filedialog "Select SSL key file:" 0 0 2>&1 >/dev/tty)
+sudo mkdir -p /etc/apache2/ssl
+sudo cp "$certfile" /etc/apache2/ssl/snipe-it.crt
+sudo cp "$keyfile" /etc/apache2/ssl/snipe-it.key
+sudo sed -i 's|<VirtualHost \*:80>|<VirtualHost \*:443>\n    SSLEngine on\n    SSLCertificateFile /etc/apache2/ssl/snipe-it.crt\n    SSLCertificateKeyFile /etc/apache2/ssl/snipe-it.key\n</VirtualHost>|g' /etc/apache2/sites-available/000-default.conf
+
+# Set up Apache
+sudo a2enmod rewrite
+sudo a2enmod ssl
+sudo systemctl restart apache2
+
+# Set file permissions
+sudo chown -R www-data:www-data /var/www/snipe-it/public/
+sudo chown -R www-data:www-data /var/www/snipe-it/storage/
+sudo chmod -R 755 /var/www/snipe-it/public/
+sudo chmod -R 755 /var/www/snipe-it/storage/
+
+# Display message box
+dialog --msgbox "Snipe IT has been successfully installed. The web files are located in /var/www/snipe-it/public/" 0 0
+                    ;;
+####################################################################################################                    
+                9) 
+                    # Install necessary packages
+sudo apt-get update
+sudo apt-get install -y apache2 libapache2-mod-php7.4 php7.4-cli php7.4-mysql php7.4-gd php7.4-mbstring php7.4-xml php7.4-curl php7.4-bcmath php7.4-zip mariadb-server mariadb-client git unzip certbot python3-certbot-apache
+
+# Set up database
+dbname=$(dialog --inputbox "Enter database name:" 0 0 2>&1 >/dev/tty)
+dbuser=$(dialog --inputbox "Enter database user:" 0 0 2>&1 >/dev/tty)
+dbpass=$(dialog --passwordbox "Enter database password:" 0 0 2>&1 >/dev/tty)
+dbhost=$(dialog --inputbox "Enter database host (optional):" 0 0 2>&1 >/dev/tty)
+sudo mysql -e "CREATE DATABASE $dbname;"
+sudo mysql -e "GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'$dbhost' IDENTIFIED BY '$dbpass';"
+
+# Download and set up Snipe IT
+sudo rm -rf /var/www/snipe-it
+sudo git clone https://github.com/snipe/snipe-it /var/www/snipe-it
+cd /var/www/snipe-it
+sudo git checkout tags/v5.2.2
+sudo cp .env.example .env
+sudo composer install --no-dev --prefer-source
+sudo php artisan key:generate --force
+sudo sed -i "s|DB_DATABASE=snipeit|DB_DATABASE=$dbname|g" .env
+sudo sed -i "s|DB_USERNAME=snipeit|DB_USERNAME=$dbuser|g" .env
+sudo sed -i "s|DB_PASSWORD=snipeit|DB_PASSWORD=$dbpass|g" .env
+sudo sed -i "s|APP_URL=http://localhost|APP_URL=https://localhost|g" .env
+
+# Set up SSL with Certbot
+domain=$(dialog --inputbox "Enter your domain name for SSL certificate:" 0 0 2>&1 >/dev/tty)
+email=$(dialog --inputbox "Enter your email for SSL certificate:" 0 0 2>&1 >/dev/tty)
+sudo certbot --apache --agree-tos --no-eff-email --email $email -d $domain
+
+# Set up Apache
+sudo a2enmod rewrite
+sudo systemctl restart apache2
+
+# Set file permissions
+sudo chown -R www-data:www-data /var/www/snipe-it/public/
+sudo chown -R www-data:www-data /var/www/snipe-it/storage/
+sudo chmod -R 755 /var/www/snipe-it/public/
+sudo chmod -R 755 /var/www/snipe-it/storage/
+
+# Display message box
+dialog --msgbox "Snipe IT has been successfully installed with SSL. The web files are located in /var/www/snipe-it/public/" 0 0
+                    ;;
+####################################################################################################                    
+                10)
                     exit
                     ;;
 
