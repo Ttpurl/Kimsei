@@ -8,7 +8,8 @@
                      7 "Grafana WIP (User SSL)"
                      8 "Snipe IT WIP (User SSL)"
                      9 "Samba Setup"
-                     10 "Back")
+                     10 "APT-Mirror (Ubuntu) 214GB WIP"
+                     11 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -819,6 +820,58 @@ dialog --backtitle "Samba Setup" --title "Samba Setup Complete" --msgbox "Samba 
                     ;;
 ####################################################################################################                    
                 10)
+# Prompt user for domain name of Apache server
+read -p "Enter the domain name of the Apache server: " domain_name
+
+# Install Apache
+sudo apt-get update
+sudo apt-get install apache2
+
+# Install apt-mirror
+sudo apt-get install apt-mirror
+
+# Backup original configuration file
+sudo cp /etc/apt/mirror.list /etc/apt/mirror.list.original
+
+# Create new configuration file with Ubuntu updates
+echo "############# Ubuntu Main Repos" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
+echo "" | sudo tee -a /etc/apt/mirror.list
+echo "############# Ubuntu Partner Repo" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" | sudo tee -a /etc/apt/mirror.list
+
+# Update the mirror
+sudo apt-mirror
+# Create Var Directory
+sudo mkdri /var/www/$domain_name
+# Create symbolic link in Apache web files
+sudo ln -s /var/spool/apt-mirror/mirror/archive.ubuntu.com/ubuntu /var/www/$domain_name/
+# Create virtual host configuration file
+echo "<VirtualHost *:80>" | sudo tee /etc/apache2/sites-available/$domain_name.conf
+echo "    ServerName $domain_name" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+echo "    ServerAlias www.$domain_name" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+echo "    DocumentRoot /var/www/$domain_name" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+echo "    <Directory /var/www/$domain_name>" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+echo "        AllowOverride All" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+echo "        Require all granted" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+echo "    </Directory>" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+echo "</VirtualHost>" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
+
+# Disable the default virtual host and enable the new one
+sudo a2dissite 000-default.conf
+sudo a2ensite $domain_name.conf
+
+# Restart Apache
+sudo service apache2 restart
+
+echo "Apache web server is installed and apt-mirror is set up with Ubuntu updates. A symbolic link has been created in /var/www/$domain_name. The server is now only accessible at http://$domain_name/".
+sleep 5.0
+                    ;;
+####################################################################################################
+                11)
                     exit
                     ;;
 
