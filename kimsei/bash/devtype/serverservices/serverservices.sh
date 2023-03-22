@@ -8,7 +8,7 @@
                      7 "Grafana WIP (User SSL)"
                      8 "Snipe IT WIP (User SSL)"
                      9 "Samba Setup"
-                     10 "APT-Mirror (Ubuntu) 214GB WIP"
+                     10 "APT-Mirror (Ubuntu) 214GB"
                      11 "Back")
 
             CHOICE=$(dialog --clear \
@@ -846,7 +846,7 @@ echo "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" | sudo
 # Update the mirror
 sudo apt-mirror
 # Create Var Directory
-sudo mkdri /var/www/$domain_name
+sudo mkdir /var/www/$domain_name
 # Create symbolic link in Apache web files
 sudo ln -s /var/spool/apt-mirror/mirror/archive.ubuntu.com/ubuntu /var/www/$domain_name/
 # Create virtual host configuration file
