@@ -8,7 +8,7 @@
                      7 "Grafana WIP (User SSL)"
                      8 "Snipe IT WIP (User SSL)"
                      9 "Samba Setup"
-                     10 "APT-Mirror (Ubuntu) 214GB"
+                     10 "APT-Mirror (Ubuntu) 300+GB"
                      11 "Kiwix Wikipedia (User SSL)"
                      12 "Back")
 
@@ -29,9 +29,12 @@ MESSAGE="Welcome to the NTP server installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-echo "Updating system now"
-sleep 0.3
-sudo apt-get update -y
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
 #Installing NTP 1/3
 # Install NTP and display a status bar
 (
@@ -397,7 +400,18 @@ MESSAGE="Welcome to the Pihole DNS installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
             curl -sSL https://install.pi-hole.net | PIHOLE_SKIP_OS_CHECK=true sudo -E bash
+            # Define the title and message for the dialog box
+TITLE="Pihole DNS Installer Complete"
+MESSAGE="Success! The Pi hole DNS server is now installed"
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     ;;
 ####################################################################################################                    
                 3)
@@ -408,10 +422,12 @@ MESSAGE="Welcome to the Tor proxy installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-clear
-#Welcome 1/1
-#Installing Tor 0/1
-sudo apt update
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
 (
   echo "XXX"
   echo "Installing Tor..."
@@ -643,10 +659,12 @@ MESSAGE="Welcome to the Jellyfin installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-sleep 1.0
-echo "Updating system now"
-sleep 0.5
-sudo apt-get update -y
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
 (
   echo "XXX"
   echo "Installing apt-transport-https..."
@@ -684,15 +702,19 @@ MESSAGE="Welcome to the Plex server installation script"
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     # Add the Plex repository key
-                    clear
+
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | sudo apt-key add -
 
 # Add the Plex repository to the sources list
 echo deb https://downloads.plex.tv/repo/deb public main | sudo tee /etc/apt/sources.list.d/plexmediaserver.list
 
 # Update the package lists
-sudo apt update
-clear
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
 # Install Plex Media Server
 (
   echo "XXX"
@@ -716,7 +738,12 @@ dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                 echo "Installing Xrdp now..."
                 2.0
                     # Install xrdp and ssl-cert packages
-sudo apt-get update
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
 (
   echo "XXX"
   echo "Installing ssl-cert..."
@@ -800,8 +827,13 @@ sleep 4.0
                     ;;
                 7)
                     # Install necessary packages
-sudo apt-get update
-sudo apt-get install -y adduser libfontconfig1 dialog
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+sudo apt-get install -y adduser libfontconfig1
 
 # Get user input for IP address and SSL certificates
 exec 3>&1
@@ -849,9 +881,18 @@ dialog --backtitle "Grafana Installation" --title "Installation Complete" \
 ####################################################################################################                    
                 8)
                     # Install necessary packages
-sudo apt-get update
-sudo apt-get install -y apache2 libapache2-mod-php7.4 php7.4-cli php7.4-mysql php7.4-gd php7.4-mbstring php7.4-xml php7.4-curl php7.4-bcmath php7.4-zip mariadb-server mariadb-client git unzip mysql-server
-
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get install -y apache2 libapache2-mod-php7.4 php7.4-cli php7.4-mysql php7.4-gd php7.4-mbstring php7.4-xml php7.4-curl php7.4-bcmath php7.4-zip mariadb-server mariadb-client git unzip mysql-server 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Installing Packages" --gauge "Please wait..." 10 60 0
 # Set up database
 dbname=$(dialog --inputbox "Enter database name:" 0 0 2>&1 >/dev/tty)
 dbuser=$(dialog --inputbox "Enter database user:" 0 0 2>&1 >/dev/tty)

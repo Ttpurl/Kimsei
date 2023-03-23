@@ -25,9 +25,15 @@ MESSAGE="Welcome to the VoIP server installation script"
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 clear
 #Updating Repositories (0/1)
-echo "Updating repositories now"
-sleep 0.3
-sudo apt-get update -y
+(
+  echo "XXX"
+  echo "Updating Repositories..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
 #Updating Repositories (1/1)
 #Installing Mumble (0/3)
 clear
