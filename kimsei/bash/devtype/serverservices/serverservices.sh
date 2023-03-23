@@ -25,7 +25,7 @@
                    clear
 # Define the title and message for the dialog box
 TITLE="NTP Server Installation"
-MESSAGE="Welcome to the NTP server installation!"
+MESSAGE="Welcome to the NTP server installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
@@ -381,31 +381,56 @@ restrict source notrap nomodify noquery
 esac
 sudo service ntp restart
 sudo ntpd
+# Define the title and message for the dialog box
+TITLE="NTP Server Installation Complete"
+MESSAGE="Success! The NTP server is now installed"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     ;;
                 2)
 ####################################################################################################
                     clear
+                    # Define the title and message for the dialog box
+TITLE="Pihole DNS Installer"
+MESSAGE="Welcome to the Pihole DNS installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
             curl -sSL https://install.pi-hole.net | PIHOLE_SKIP_OS_CHECK=true sudo -E bash
                     ;;
 ####################################################################################################                    
                 3)
                     clear
-echo "Welcome to the Tor proxy installation script"
-sleep 1.0
-echo "Let's get started."
-sleep 0.2
+# Define the title and message for the dialog box
+TITLE="Tor Server Installation"
+MESSAGE="Welcome to the Tor proxy installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 clear
 #Welcome 1/1
 #Installing Tor 0/1
-echo "Installing Tor..."
 sudo apt update
-sudo apt install tor
-echo "What port would you like to use for the tor proxy?"
-read torproxyport
-echo "Ok. Setting tor proxy to port to $torproxyport"
-sleep 0.3
-echo "Setting up your torrc config now"
-sleep 0.1
+(
+  echo "XXX"
+  echo "Installing Tor..."
+  echo "XXX"
+  sudo apt-get install tor -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Tor" --gauge "Please wait..." 10 60 0
+  # Use dialog to prompt the user for a number input
+torproxyport=$(dialog --stdout --inputbox "Enter the Tor proxy port (1-65535):" 0 0)
+
+# Check if the user entered a number
+if ! [[ "$torproxyport" =~ ^[1-65535]+$ ]]; then
+    dialog --msgbox "Invalid input. Please enter a number." 0 0
+    exit 1
+fi
+echo "The Tor proxy port is: $torproxyport for this server"
+# Print the value of the variable
 echo "" > /etc/tor/torrc
 echo "## Configuration file for a typical Tor user
 ## Last updated 9 October 2013 for Tor 0.2.5.2-alpha.
@@ -599,25 +624,29 @@ DataDirectory /var/lib/tor
 ## address manually to your friends, uncomment this line:
 #PublishServerDescriptor 0" >> /etc/tor/torrc
 clear
-echo "Finished installing Tor"
-sleep 1.0
 #Installing Tor 1/1
 #Cleaning up 0/1
-echo "Restarting Tor with the new configurations"
 sudo service tor restart
-clear
-echo "Your Tor proxy is set up! Use a SOCKS5 Proxy to connect!"
-sleep 2.0
+# Define the title and message for the dialog box
+TITLE="Tor Proxy Installer Complete Installation"
+MESSAGE="Success! The Tor proxy is installed. Use a proxy to this IP:$torproxyport"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     ;;
 ####################################################################################################                    
                 4)
                 clear
-                    echo "Welcome to the Jellyfin installer"
+                # Define the title and message for the dialog box
+TITLE="Jellyfin Server Installer"
+MESSAGE="Welcome to the Jellyfin installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 sleep 1.0
 echo "Updating system now"
 sleep 0.5
 sudo apt-get update -y
-sudo apt install apt-transport-https -y
 (
   echo "XXX"
   echo "Installing apt-transport-https..."
@@ -639,20 +668,23 @@ sudo apt update
   echo "Installation complete."
   echo "XXX"
 ) | dialog --title "Installing Jellyfin" --gauge "Please wait..." 10 60 0
-clear
-echo "Jellyfin is now installed! Go to:"
-echo "                                      "
-echo "     This IP:8096                     "
-echo "          Or                          "
-echo "     localhost:8096                   "
-echo "                                      "
-sleep 5.0
+# Define the title and message for the dialog box
+TITLE="Jellyfin Server Installation Finished"
+MESSAGE="Jellyfin is now installed! Go to:This IP:8096  "
 
-
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     ;;
 ####################################################################################################
                 5)
+                # Define the title and message for the dialog box
+TITLE="Plex Server Installation"
+MESSAGE="Welcome to the Plex server installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     # Add the Plex repository key
+                    clear
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | sudo apt-key add -
 
 # Add the Plex repository to the sources list
@@ -660,9 +692,8 @@ echo deb https://downloads.plex.tv/repo/deb public main | sudo tee /etc/apt/sour
 
 # Update the package lists
 sudo apt update
-
+clear
 # Install Plex Media Server
-sudo apt install plexmediaserver
 (
   echo "XXX"
   echo "Installing Plex..."
@@ -672,13 +703,12 @@ sudo apt install plexmediaserver
   echo "Installation complete."
   echo "XXX"
 ) | dialog --title "Installing Plex" --gauge "Please wait..." 10 60 0
-echo "Plex is now installed! Go to:"
-echo "                                      "
-echo "     This IP:32400                    "
-echo "          Or                          "
-echo "     localhost:32400                  "
-echo "                                      "
-sleep 5.0
+# Define the title and message for the dialog box
+TITLE="Plex Server Installation Finished"
+MESSAGE="Plex is now installed! Go to:This IP:32400  "
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     ;;
 ####################################################################################################
                 6)
@@ -705,6 +735,7 @@ sudo apt-get update
   echo "Installation complete."
   echo "XXX"
 ) | dialog --title "Installing xrdp" --gauge "Please wait..." 10 60 0
+
 # Add user to ssl-cert group
 sudo usermod -aG ssl-cert $USER
 
@@ -714,21 +745,54 @@ sudo adduser xrdp ssl-cert
 # Enable xrdp service
 sudo systemctl enable xrdp
 
-# Prompt user to allow xrdp port in UFW
-read -p "Do you want to allow the xrdp port (3389) in UFW? (y/n) " choice
+# Define the options to display in the dialog box
+OPTIONS=("xubuntu-desktop" "ubuntu-desktop")
 
-if [ "$choice" = "y" ]; then
-    # Allow xrdp port in UFW
-    sudo ufw allow 3389
-    echo "xrdp port allowed in UFW."
-    echo "Success! Xrdp is now installed."
-    sleep 5.0
+# Define the title and prompt for the dialog box
+TITLE="Choose desktop environment"
+PROMPT="Select the desktop environment you want to install:"
+
+# Use dialog to display the options to the user and save their choice to the variable CHOICE
+CHOICE=$(dialog --clear --title "$TITLE" --menu "$PROMPT" 10 40 2 "${OPTIONS[@]}" 2>&1 >/dev/tty)
+
+# Check if the user has made a choice or cancelled the dialog
+if [ "$CHOICE" != "" ]; then
+  # Check if the selected desktop environment is already installed
+  if dpkg -l "$CHOICE" &> /dev/null; then
+    echo "The $CHOICE package is already installed."
+  else
+    # Prompt the user to confirm that they want to download and install the selected desktop environment
+    CONFIRM=$(dialog --clear --yesno "Do you want to download and install $CHOICE?" 10 40 2>&1 >/dev/tty)
+
+    # If the user confirms, download and install the selected desktop environment
+    if [ "$CONFIRM" = "0" ]; then
+      sudo apt-get update
+      sudo apt-get install "$CHOICE"
+    else
+      echo "Installation cancelled."
+    fi
+  fi
 else
-    echo "xrdp port not allowed in UFW."
-    echo "Success! Xrdp is now installed."
-    sleep 5.0
+  echo "Selection cancelled."
 fi
 
+# Prompt user to allow xrdp port in UFW
+# Display the Yes/No dialog box
+dialog --title "Allow incoming traffic on port 3389?" \
+       --yesno "Do you want to allow incoming traffic on port 3389?" 7 50
+
+# Check the user's answer
+case $? in
+  0) # The user chose Yes
+    sudo ufw allow 3389
+    dialog --title "Success" --msgbox "Xrdp is installed with port 3389 now open" 7 50
+    ;;
+  1) # The user chose No or pressed Escape
+    dialog --title "Canceled" --msgbox "Xrdp is intalled with no changes made to UFW" 7 50
+    ;;
+esac
+
+exit 0
 # Restart xrdp service
 sudo systemctl restart xrdp
 echo "Success! Xrdp is installed."
@@ -834,6 +898,12 @@ dialog --msgbox "Snipe IT has been successfully installed. The web files are loc
 ####################################################################################################                    
                 9) 
 # Install Samba and ncurses-based configuration tool
+# Define the title and message for the dialog box
+TITLE="Samba Service Installation"
+MESSAGE="Welcome to the Samba service installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 (
   echo "XXX"
   echo "Installing Apache..."

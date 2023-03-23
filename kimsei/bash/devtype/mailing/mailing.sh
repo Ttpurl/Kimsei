@@ -18,6 +18,12 @@ while true; do
     case $CHOICE in
         1)
         clear
+        # Define the title and message for the dialog box
+TITLE="Mailinabox Server Installation"
+MESSAGE="Welcome to the Mailinabox server installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
             curl -s https://mailinabox.email/setup.sh | sudo bash
             ;;
         2)

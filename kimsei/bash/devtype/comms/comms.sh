@@ -17,9 +17,12 @@ while true; do
     # Process menu selection
     case $CHOICE in
         1)
-            clear
-echo "Welcome to the VoIP installation."
-sleep 1.0
+# Define the title and message for the dialog box
+TITLE="VoIP Server Installation"
+MESSAGE="Welcome to the VoIP server installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 clear
 #Updating Repositories (0/1)
 echo "Updating repositories now"
@@ -28,31 +31,24 @@ sudo apt-get update -y
 #Updating Repositories (1/1)
 #Installing Mumble (0/3)
 clear
-echo "Installing the VoIP server now"
-sleep 0.3
+(
+  echo "XXX"
+  echo "Installing Mumble-Server..."
+  echo "XXX"
+  sudo apt-get install mumble-server -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Mumble-Server" --gauge "Please wait..." 10 60 0
 sudo apt install mumble-server -y
 #Installing Mumble (1/3)
-clear
-echo "Mumble-Server installed. The next prompts will help customize your VoIP server to your liking!"
-sleep 1.0
-echo "Set your password to access the VoIP server via superuser here. We reccomend 8 characters minimum but there is no minimum:"
-read voippassword
-voippassword=$voippassword
-echo "What is the IP of the server hosting the VoIP server? (Can be private or public addressing):"
-read voipip
-voipip=$voipip
-echo "What is the port that you would like to connect to for VoIP? (Default is 64738 but any port will do)"
-read voipport
-voipport=$voipport
-echo "how many bits per second can users send voice data?(Default is 72,000, Max 192000)" 
-read voipbandwidth
-voipbandwidth=$voipbandwidth
-echo "How many users are allowed at once?(Default is 100):"
-read voipusers
-voipusers=$voipusers
-echo "How many days would you like to keep logs?(Set to 0 to keep forever, or -1 to disable logging to the DB)"
-read voiplog
-voiplog=$voiplog
+# Use dialog to get user input
+voippassword=$(dialog --clear --insecure --passwordbox "Enter the VoIP password:" 10 40 3>&1 1>&2 2>&3)
+voipip=$(dialog --clear --inputbox "Enter the VoIP IP:" 10 40 3>&1 1>&2 2>&3)
+voipport=$(dialog --clear --inputbox "Enter the VoIP port (default is 64738):" 10 40 3>&1 1>&2 2>&3)
+voipbandwidth=$(dialog --clear --inputbox "Enter the bandwidth for voice (72,000-356,000 Kbits):" 10 40 3>&1 1>&2 2>&3)
+voipusers=$(dialog --clear --inputbox "Enter the max amount of VoIP users:" 10 40 3>&1 1>&2 2>&3)
+voiplog=$(dialog --clear --inputbox "Enter the VoIP groups:" 10 40 3>&1 1>&2 2>&3)
 #Installing Mumble (2/3)
 sleep 0.3
 clear
@@ -440,7 +436,12 @@ Ice.MessageSizeMax=65536" | sudo tee -a /etc/mumble-server.ini
 sudo service mumble-server restart
 clear
 #Installing Mumble (3/3)
-echo "Script is completed! Enjoy your new VoIP server! Note: to change the config of the mumble-server, go to /etc/mumble-server.ini"
+# Define the title and message for the dialog box
+TITLE="VoIP Server Installation Complete"
+MESSAGE="The VoIP is succesfully installed! Go to this IP:$voipport on the Mumble app to get started"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
             ;;
         2)
         clear

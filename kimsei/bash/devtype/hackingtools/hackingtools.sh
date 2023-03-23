@@ -21,17 +21,12 @@ while true; do
     # Process menu selection
     case $CHOICE in
         1)
-        # Set the dialog colors and font
-        export DIALOGRC=/path/to/dialog.rc
+# Define the title and message for the dialog box
+TITLE="Pwndrop Server Installer"
+MESSAGE="Welcome to the Pwndrop installation script"
 
-        # Define the text to display
-        TEXT="Pwndrop is a self-deployable file hosting service
-            specially developed for red teamers,
-            allowing them to easily upload and transfer payloads over HTTP and WebDAV."
-
-        # Use dialog to display the text in a textbox
-        dialog --title "Pwndrop" --textbox /dev/stdin 50 50 <<< "$TEXT"
-
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
             # Use dialog to ask the user yes or no
             dialog --yesno "Do you want to install?" 15 30
 
