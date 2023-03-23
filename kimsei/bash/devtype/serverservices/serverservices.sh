@@ -9,7 +9,8 @@
                      8 "Snipe IT WIP (User SSL)"
                      9 "Samba Setup"
                      10 "APT-Mirror (Ubuntu) 214GB"
-                     11 "Back")
+                     11 "Kiwix Wikipedia (User SSL)"
+                     12 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -22,23 +23,41 @@
             case $CHOICE in
                 1)
                    clear
-echo "Welcome to the NTP server installation"
-sleep 1.0
+# Define the title and message for the dialog box
+TITLE="NTP Server Installation"
+MESSAGE="Welcome to the NTP server installation!"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 echo "Updating system now"
 sleep 0.3
 sudo apt-get update -y
 #Installing NTP 1/3
-echo "Installing NTP..."
-sudo apt install ntp
+# Install NTP and display a status bar
+(
+  echo "XXX"
+  echo "Installing NTP..."
+  echo "XXX"
+  sudo apt-get install -y ntp 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing NTP" --gauge "Please wait..." 10 60 0
 #Installing NTP 2/3
-echo "Where would you like your NTP servers to solicit?(US,DE,NL,RO,FR)Choose one:"
-read ntpserver
+# Display dialog box and prompt user to choose an option
+CHOICE=$(dialog --clear --title "Choose an option" --menu "Select an option:" 10 50 5 \
+    1 "United states" \
+    2 "Germany" \
+    3 "Netherlands" \
+    4 "Romania" \
+    5 "France" \
+    3>&1 1>&2 2>&3)
 
-ntpserver=$ntpserver 
-
-if [ "$ntpserver" == "US" ]; then
-  echo "Ok! Adding $ntpserver based time servers to your NTP config!"
-      echo "" > /etc/ntp.conf
+# Check which option the user chose and provide an if statement for each option
+case $CHOICE in
+    1)
+    #United States
+echo "" > /etc/ntp.conf
     echo "# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
 
 driftfile /var/lib/ntp/ntp.drift
@@ -99,10 +118,10 @@ restrict source notrap nomodify noquery
 # next lines.  Please do this only if you trust everybody on the network!
 #disable auth
 #broadcastclient" >> /etc/ntp.conf
-fi
-  if [ "$ntpserver" == "DE" ]; then
-    echo "Ok! Adding $ntpserver based time servers to your NTP config!"
-    echo "" > /etc/ntp.conf
+        ;;
+    2)
+     #Germany
+     echo "" > /etc/ntp.conf
     echo "# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
 
 driftfile /var/lib/ntp/ntp.drift
@@ -163,10 +182,10 @@ restrict source notrap nomodify noquery
 # next lines.  Please do this only if you trust everybody on the network!
 #disable auth
 #broadcastclient" >> /etc/ntp.conf
-fi
-    if [ "$ntpserver" == "NL" ]; then
-    echo "Ok! Adding $ntpserver based time servers to your NTP config!"
-        echo "" > /etc/ntp.conf
+        ;;
+    3)
+    # Netherlands
+     echo "" > /etc/ntp.conf
     echo "# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
 
 driftfile /var/lib/ntp/ntp.drift
@@ -227,10 +246,10 @@ restrict source notrap nomodify noquery
 # next lines.  Please do this only if you trust everybody on the network!
 #disable auth
 #broadcastclient" >> /etc/ntp.conf
-fi
-    if [ "$ntpserver" == "RO" ]; then
-    echo "Ok! Adding $ntpserver based time servers to your NTP config!"
-        echo "" > /etc/ntp.conf
+        ;;
+    4)
+    # Romania
+      echo "" > /etc/ntp.conf
     echo "# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
 
 driftfile /var/lib/ntp/ntp.drift
@@ -291,10 +310,10 @@ restrict source notrap nomodify noquery
 # next lines.  Please do this only if you trust everybody on the network!
 #disable auth
 #broadcastclient" >> /etc/ntp.conf
-fi
-    if [ "$ntpserver" == "FR" ]; then
-    echo "Ok! Adding $ntpserver based time servers to your NTP config!"
-        echo "" > /etc/ntp.conf
+        ;;
+    5)
+        # France
+         echo "" > /etc/ntp.conf
     echo "# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
 
 driftfile /var/lib/ntp/ntp.drift
@@ -355,8 +374,13 @@ restrict source notrap nomodify noquery
 # next lines.  Please do this only if you trust everybody on the network!
 #disable auth
 #broadcastclient" >> /etc/ntp.conf
-    fi
-    sudo service ntp restart
+        ;;
+    *)
+        echo "Invalid option selected"
+        ;;
+esac
+sudo service ntp restart
+sudo ntpd
                     ;;
                 2)
 ####################################################################################################
@@ -594,10 +618,27 @@ echo "Updating system now"
 sleep 0.5
 sudo apt-get update -y
 sudo apt install apt-transport-https -y
+(
+  echo "XXX"
+  echo "Installing apt-transport-https..."
+  echo "XXX"
+  sudo apt-get install apt-transport-https -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing apt-transport-https" --gauge "Please wait..." 10 60 0
 wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | sudo apt-key add -
 echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | sudo tee /etc/apt/sources.list.d/jellyfin.list
 sudo apt update
-sudo apt install jellyfin -y
+(
+  echo "XXX"
+  echo "Installing Jellyfin..."
+  echo "XXX"
+  sudo apt-get install jellyfin -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Jellyfin" --gauge "Please wait..." 10 60 0
 clear
 echo "Jellyfin is now installed! Go to:"
 echo "                                      "
@@ -622,6 +663,15 @@ sudo apt update
 
 # Install Plex Media Server
 sudo apt install plexmediaserver
+(
+  echo "XXX"
+  echo "Installing Plex..."
+  echo "XXX"
+  sudo apt-get install plexmediaserver -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Plex" --gauge "Please wait..." 10 60 0
 echo "Plex is now installed! Go to:"
 echo "                                      "
 echo "     This IP:32400                    "
@@ -637,8 +687,24 @@ sleep 5.0
                 2.0
                     # Install xrdp and ssl-cert packages
 sudo apt-get update
-sudo apt-get install xrdp ssl-cert -y
-
+(
+  echo "XXX"
+  echo "Installing ssl-cert..."
+  echo "XXX"
+  sudo apt-get install ssl-cert -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing ssl-cert" --gauge "Please wait..." 10 60 0
+(
+  echo "XXX"
+  echo "Installing xrdp..."
+  echo "XXX"
+  sudo apt-get install xrdp -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing xrdp" --gauge "Please wait..." 10 60 0
 # Add user to ssl-cert group
 sudo usermod -aG ssl-cert $USER
 
@@ -768,9 +834,21 @@ dialog --msgbox "Snipe IT has been successfully installed. The web files are loc
 ####################################################################################################                    
                 9) 
 # Install Samba and ncurses-based configuration tool
-sudo apt-get update
-sudo apt-get install samba samba-common-bin libpam-smbpass -y
-
+(
+  echo "XXX"
+  echo "Installing Apache..."
+  echo "XXX"
+  sudo apt-get install -y samba 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "XXX"
+  sudo apt-get install -y samba-common-bin 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "XXX"
+  sudo apt-get install -y libpam-smbpass -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Samba packages" --gauge "Please wait..." 10 60 0
 # Get user input for Samba configuration options
 dialog --backtitle "Samba Setup" --title "Samba Share Configuration" --form "Please provide the following information:" 15 60 5 \
     "Share Name:" 1 1 "" 1 20 40 0 \
@@ -820,35 +898,64 @@ dialog --backtitle "Samba Setup" --title "Samba Setup Complete" --msgbox "Samba 
                     ;;
 ####################################################################################################                    
                 10)
-# Prompt user for domain name of Apache server
-read -p "Enter the domain name of the Apache server: " domain_name
+# Define the title and message for the dialog box
+TITLE="Enter Domain Name"
+MESSAGE="Please enter a domain name:"
 
+# Display a dialog box prompting the user to enter a domain name
+domain_name=$(dialog --title "$TITLE" --inputbox "$MESSAGE" 8 60 2>&1 >/dev/tty)
+
+# Display the value of the domain_name variable
+echo "Domain name entered: $domain_name"
 # Install Apache
 sudo apt-get update
-sudo apt-get install apache2
+# Install Apache and display a status bar
+(
+  echo "XXX"
+  echo "Installing Apache..."
+  echo "XXX"
+  sudo apt-get install -y apache2 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Apache" --gauge "Please wait..." 10 60 0
 
 # Install apt-mirror
-sudo apt-get install apt-mirror
+# Install Apt-Mirror and display a status bar
+(
+  echo "XXX"
+  echo "Installing Aapt-Mirror..."
+  echo "XXX"
+  sudo apt-get install -y apt-mirror 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Apt-mirror" --gauge "Please wait..." 10 60 0
 
 # Backup original configuration file
 sudo cp /etc/apt/mirror.list /etc/apt/mirror.list.original
 
 # Create new configuration file with Ubuntu updates
 echo "############# Ubuntu Main Repos" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
-echo "" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy main restricted" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-updates main restricted" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy universe" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-updates universe" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy multiverse" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-updates multiverse" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -sc) jammy-security main restricted" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -sc) jammy-security universe" | sudo tee -a /etc/apt/mirror.list
+echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -sc) jammy-security multiverse" | sudo tee -a /etc/apt/mirror.list
+#echo " $(lsb_release -sc)" | sudo tee -a /etc/apt/mirror.list
 echo "############# Ubuntu Partner Repo" | sudo tee -a /etc/apt/mirror.list
 echo "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" | sudo tee -a /etc/apt/mirror.list
 
-# Update the mirror
-sudo apt-mirror
 # Create Var Directory
 sudo mkdir /var/www/$domain_name
 # Create symbolic link in Apache web files
 sudo ln -s /var/spool/apt-mirror/mirror/archive.ubuntu.com/ubuntu /var/www/$domain_name/
+
 # Create virtual host configuration file
 echo "<VirtualHost *:80>" | sudo tee /etc/apache2/sites-available/$domain_name.conf
 echo "    ServerName $domain_name" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
@@ -867,13 +974,46 @@ sudo a2ensite $domain_name.conf
 # Restart Apache
 sudo service apache2 restart
 
+# Update the mirror
+sudo apt-mirror
+
 echo "Apache web server is installed and apt-mirror is set up with Ubuntu updates. A symbolic link has been created in /var/www/$domain_name. The server is now only accessible at http://$domain_name/".
 sleep 5.0
                     ;;
 ####################################################################################################
                 11)
+                    # Install Apache and OpenSSL
+sudo apt-get update
+sudo apt-get install -y apache2 openssl
+
+# Ask user for SSL certificate and key file paths
+read -p "Enter the path to your SSL certificate (.crt): " CERT_FILE
+read -p "Enter the path to your SSL key file (.key): " KEY_FILE
+
+# Copy the SSL certificate and key files to the correct locations
+sudo cp "$CERT_FILE" /etc/ssl/certs/
+sudo cp "$KEY_FILE" /etc/ssl/private/
+
+# Configure Apache for SSL
+sudo a2enmod ssl
+sudo a2ensite default-ssl.conf
+
+# Restart Apache
+sudo systemctl restart apache2
+
+# Install kiwix-tools
+sudo apt-get install -y kiwix-tools
+
+# Download a ZIM file (replace with your own ZIM file URL)
+sudo kiwix-manage /var/www/html/library.xml add "https://download.kiwix.org/zim/wikipedia_en_all_nopic_2022-02.zim"
+
+# Enable directory listing for the ZIM files directory
+sudo sed -i 's/Options Indexes FollowSymLinks/Options +Indexes +FollowSymLinks/' /etc/apache2/apache2.conf
+sudo systemctl restart apache2
+                    ;;
+####################################################################################################
+                12)
                     exit
                     ;;
-
             esac
         done
