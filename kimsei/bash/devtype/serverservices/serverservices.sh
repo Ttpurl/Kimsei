@@ -6,7 +6,8 @@
                      5 "Plex"
                      6 "XRDP"
                      7 "Samba Setup"
-                     8 "Back")
+                     8 "Portainer (User SSL)"
+                     9 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -862,8 +863,60 @@ dialog --backtitle "Samba Setup" --title "Samba Setup Complete" --msgbox "Samba 
                     ;;
 ####################################################################################################                    
                 8)
-                    exit
+# Define the title and message for the dialog box
+TITLE="Portainer Service Installation"
+MESSAGE="Welcome to the Portainer service installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
+(
+  echo "XXX"
+  echo "Installing Docker..."
+  echo "XXX"
+  sudo apt-get install docker -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installing Docker.io..."
+  echo "XXX"
+  sudo apt-get install docker.io -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Installing Docker" --gauge "Please wait..." 10 60 0
+# Display dialog box to prompt user for SSL certificate and key file paths
+dialog --backtitle "Setup Portainer SSL" \
+       --title "SSL Certificate and Key" \
+       --form "\nEnter the path to your SSL certificate and key files:" \
+       20 70 0 \
+       "Certificate:" 1 1 "" 1 20 45 0 \
+       "Key:" 2 1 "" 2 20 45 0 \
+       2> /tmp/portainer_ssl_input
+
+# Read user input from dialog box
+CERT=$(sed -n 1p /tmp/portainer_ssl_input)
+KEY=$(sed -n 2p /tmp/portainer_ssl_input)
+
+# Check if specified SSL certificate and key files exist
+if [ ! -f "$CERT" ] || [ ! -f "$KEY" ]; then
+    dialog --backtitle "Setup Portainer SSL" \
+           --title "Error" \
+           --msgbox "Certificate or key file not found!" \
+           10 50
+    exit 1
+fi
+
+# Start Portainer with SSL certificate and key files
+docker run -d \
+           --name portainer \
+           -p 443:443 \
+           -v /var/run/docker.sock:/var/run/docker.sock \
+           -v portainer_data:/data \
+           -v "$CERT":/certs/server.crt \
+           -v "$KEY":/certs/server.key \
+           portainer/portainer-ce \
+           --ssl \
+           --sslcert /certs/server.crt \
+           --sslkey /certs/server.key
                     ;;
 ####################################################################################################
+                9)
+                  exit
+                  ;;
             esac
         done

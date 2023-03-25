@@ -102,7 +102,18 @@ fi
 # Obtain SSL certificate for $domain
 sudo certbot --apache -d $domain -d $domain --non-interactive --agree-tos --email $email
 # Complete
-dialog --msgbox "Success! Your new website should be available at $domain! You can go to /var/www/html/$domain to change the web page files." 10 70
+dialog --msgbox "Success! Your new website should be available at $domain! You can go to /var/www/html/$domain to change the web page files. Scan the QR code on the next screen to see your new webpage" 10 70
+# get user input for URL
+url=https://$domain
+
+# create QR code and save it to /tmp directory
+qrencode -o /tmp/qrcode.png $url
+
+# display the QR code using dialog
+dialog --title "QR Code for $url" --backtitle "QR Code Generator" --ok-label "Close" --no-cancel --textbox /tmp/qrcode.png 0 0
+
+# remove the QR code file from /tmp directory
+rm /tmp/qrcode.png
 #######################################################################
                     ;;
                 2)
@@ -164,6 +175,18 @@ chown -R $(whoami):$(whoami) /var/www/html/$domain
 a2ensite $domain
 a2enmod ssl
 systemctl restart apache2
+dialog --msgbox "Success! Your new website should be available at $domain! You can go to /var/www/html/$domain to change the web page files. Scan the QR code on the next screen to see your new webpage" 10 70
+# get user input for URL
+url=https://$domain
+
+# create QR code and save it to /tmp directory
+qrencode -o /tmp/qrcode.png $url
+
+# display the QR code using dialog
+dialog --title "QR Code for $url" --backtitle "QR Code Generator" --ok-label "Close" --no-cancel --textbox /tmp/qrcode.png 0 0
+
+# remove the QR code file from /tmp directory
+rm /tmp/qrcode.png
 #######################################################################
                     ;;
                 3)
@@ -209,7 +232,18 @@ EOF
 a2ensite $domain.conf
 systemctl reload apache2
 # Complete
-dialog --msgbox "Success! Your new website should be available at $domain! You can go to /var/www/html/$domain to change the web page files." 10 70
+dialog --msgbox "Success! Your new website should be available at $domain! You can go to /var/www/html/$domain to change the web page files. Scan the QR code on the next screen to see your new webpage" 10 70
+# get user input for URL
+url=http://$domain
+
+# create QR code and save it to /tmp directory
+qrencode -o /tmp/qrcode.png $url
+
+# display the QR code using dialog
+dialog --title "QR Code for $url" --backtitle "QR Code Generator" --ok-label "Close" --no-cancel --textbox /tmp/qrcode.png 0 0
+
+# remove the QR code file from /tmp directory
+rm /tmp/qrcode.png
                     ;;
 #######################################################################
                 4)

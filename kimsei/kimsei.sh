@@ -37,40 +37,41 @@ for file in "${files[@]}"; do
                             "${OPTIONS[@]}" \
                             2>&1 >/dev/tty)
 
-            # Process menu selection
-            case $CHOICE in
-                1)
-                    sudo bash/devtype/webdev/./webdev.sh
-                    ;;
-                2)
-                    sudo bash/devtype/serverservices/./serverservices.sh
-                    ;;
-                3)
-                    sudo bash/devtype/comms/./comms.sh
-                    ;;
-                4)
-                    sudo bash/devtype/vpn/./vpn.sh
-                    ;;
-                5)
-                    sudo bash/devtype/automation/./automation.sh
-                    ;;
-                6)
-                    sudo bash/devtype/encryption/./encryption.sh
-                    ;;
-                7)
-                    sudo bash/devtype/mailing/./mailing.sh
-                    ;;
-                8)
-                    sudo bash/devtype/serverlockdown/./serverlockdown.sh
-                    ;;
-                9)  
-                clear
-                    echo "Exiting Kimsei..."
-                    exit
-                    ;;
-            esac
-        done
-    else
+
+# Process menu selection
+case $CHOICE in
+    1)
+        sudo bash/devtype/webdev/./webdev.sh
+        ;;
+    2)
+        sudo bash/devtype/serverservices/./serverservices.sh
+        ;;
+    3)
+        sudo bash/devtype/comms/./comms.sh
+        ;;
+    4)
+        sudo bash/devtype/vpn/./vpn.sh
+        ;;
+    5)
+        sudo bash/devtype/automation/./automation.sh
+        ;;
+    6)
+        sudo bash/devtype/encryption/./encryption.sh
+        ;;
+    7)
+        sudo bash/devtype/mailing/./mailing.sh
+        ;;
+    8)
+        sudo bash/devtype/serverlockdown/./serverlockdown.sh
+        ;;
+    9)
+               clear
+        echo "Exiting Kimsei..."
+        exit
+        ;;
+        esac
+    done
+else 
         echo "Kimsei is not properly configured. Please run the setup bash script."
         exit 1
     fi
