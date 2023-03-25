@@ -1,13 +1,8 @@
 #!/bin/bash
-if ! dpkg -s libncurses5-dev &> /dev/null; then
-  sudo apt-get install libncurses5-dev -y
-fi
-if ! dpkg -s ncurses-term &> /dev/null; then
-  sudo apt-get install ncurses-term -y
-fi
-if ! dpkg -s dialog &> /dev/null; then
-  sudo apt-get install dialog -y
-fi
+sudo apt update
+sudo apt-get install libncurses5-dev -y
+sudo apt-get install ncurses-term -y
+sudo apt-get install dialog -y
 TITLE="Kimsei installation"
 MESSAGE="Welcome to the Kimsei software installation!"
 
@@ -65,3 +60,4 @@ MESSAGE="The script is ready to go! You can now run sudo ./kimsei to get started
 
 # Disclaimer and notes
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
+clear

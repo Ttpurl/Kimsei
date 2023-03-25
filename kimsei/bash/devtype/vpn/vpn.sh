@@ -1,7 +1,7 @@
 #!/bin/bash
             OPTIONS=(1 "Soft Ether VPN WIP"
                      2 "OpenVPN Coming soon"
-                     3 "Wireguard Coming soon"
+                     3 "Wireguard WIP"
                      4 "Coming soon"
                      5 "Back")
 
@@ -74,7 +74,86 @@ dialog --title "Installation Complete" --msgbox "SoftEther VPN installed, runnin
                     exit
                     ;;
                 3)
-                    exit
+# Install WireGuard
+apt-get update
+apt-get install -y wireguard qrencode
+
+# Generate server and client keys
+umask 077
+wg genkey | tee /etc/wireguard/privatekey | wg pubkey > /etc/wireguard/publickey
+SERVER_PRIVATE_KEY=$(cat /etc/wireguard/privatekey)
+SERVER_PUBLIC_KEY=$(cat /etc/wireguard/publickey)
+
+# Prompt user for server IP address and DNS server
+SERVER_ADDRESS=$(dialog --stdout --title "Server IP Address" --inputbox "Enter the IP address of the VPN server:" 0 0)
+SERVER_PORT=51820
+SERVER_NETWORK=10.0.0.0/24
+DNS_SERVER=$(dialog --stdout --title "DNS Server" --inputbox "Enter the DNS server IP address:" 0 0)
+CLIENT_ADDRESS=10.0.0.2/32
+
+# Configure WireGuard
+cat << EOF > /etc/wireguard/wg0.conf
+[Interface]
+PrivateKey = $SERVER_PRIVATE_KEY
+Address = $SERVER_ADDRESS/24
+ListenPort = $SERVER_PORT
+
+[Peer]
+PublicKey = $SERVER_PUBLIC_KEY
+AllowedIPs = $SERVER_NETWORK
+EOF
+
+# Enable IP forwarding and configure iptables
+sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+sysctl -p
+iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p udp --dport $SERVER_PORT -j ACCEPT
+iptables -A FORWARD -i wg0 -j ACCEPT
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# Start WireGuard
+wg-quick up wg0
+
+# Add client configuration
+umask 077
+CLIENT_PRIVATE_KEY=$(wg genkey)
+CLIENT_PUBLIC_KEY=$(echo $CLIENT_PRIVATE_KEY | wg pubkey)
+cat << EOF > /etc/wireguard/client.conf
+[Interface]
+PrivateKey = $CLIENT_PRIVATE_KEY
+Address = $CLIENT_ADDRESS
+DNS = $DNS_SERVER
+
+[Peer]
+PublicKey = $SERVER_PUBLIC_KEY
+Endpoint = $SERVER_ADDRESS:$SERVER_PORT
+AllowedIPs = 0.0.0.0/0
+EOF
+
+# Create iOS configuration file and QR code
+umask 022
+cat << EOF > /etc/wireguard/client.ios.conf
+[Interface]
+PrivateKey = $CLIENT_PRIVATE_KEY
+Address = $CLIENT_ADDRESS
+DNS = $DNS_SERVER
+
+[Peer]
+PublicKey = $SERVER_PUBLIC_KEY
+Endpoint = $SERVER_ADDRESS:$SERVER_PORT
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25
+EOF
+qrencode -t ansiutf8 < /etc/wireguard/client.ios.conf > /tmp/qr-code.txt
+
+# Display client configuration
+dialog --title "WireGuard VPN Server" --msgbox "The VPN server has been set up. Please copy the following configuration to your client machine:\n\n$(cat /etc/wireguard/client.conf)" 0 0
+
+# Display QR code for iOS configuration
+dialog --title "WireGuard VPN Server - iOS Configuration" --textbox /tmp/qr-code.txt 0 0
+
+# Remove temporary files
+rm /tmp/qr-code.txt
                     ;;
                 4)
                     exit
