@@ -5,12 +5,8 @@
                      4 "Jellyfin"
                      5 "Plex"
                      6 "XRDP"
-                     7 "Grafana WIP (User SSL)"
-                     8 "Snipe IT WIP (User SSL)"
-                     9 "Samba Setup"
-                     10 "APT-Mirror (Ubuntu) 300+GB"
-                     11 "Kiwix Wikipedia (User SSL)"
-                     12 "Back")
+                     7 "Samba Setup"
+                     8 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -29,12 +25,9 @@ MESSAGE="Welcome to the NTP server installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+echo "Updating system now"
+sleep 0.3
+sudo apt-get update -y
 #Installing NTP 1/3
 # Install NTP and display a status bar
 (
@@ -400,18 +393,7 @@ MESSAGE="Welcome to the Pihole DNS installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
             curl -sSL https://install.pi-hole.net | PIHOLE_SKIP_OS_CHECK=true sudo -E bash
-            # Define the title and message for the dialog box
-TITLE="Pihole DNS Installer Complete"
-MESSAGE="Success! The Pi hole DNS server is now installed"
-# Display a dialog box with the welcome message
-dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     ;;
 ####################################################################################################                    
                 3)
@@ -422,12 +404,10 @@ MESSAGE="Welcome to the Tor proxy installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+clear
+#Welcome 1/1
+#Installing Tor 0/1
+sudo apt update
 (
   echo "XXX"
   echo "Installing Tor..."
@@ -659,12 +639,10 @@ MESSAGE="Welcome to the Jellyfin installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+sleep 1.0
+echo "Updating system now"
+sleep 0.5
+sudo apt-get update -y
 (
   echo "XXX"
   echo "Installing apt-transport-https..."
@@ -702,19 +680,15 @@ MESSAGE="Welcome to the Plex server installation script"
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                     # Add the Plex repository key
-
+                    clear
 curl https://downloads.plex.tv/plex-keys/PlexSign.key | sudo apt-key add -
 
 # Add the Plex repository to the sources list
 echo deb https://downloads.plex.tv/repo/deb public main | sudo tee /etc/apt/sources.list.d/plexmediaserver.list
 
 # Update the package lists
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+sudo apt update
+clear
 # Install Plex Media Server
 (
   echo "XXX"
@@ -738,20 +712,12 @@ dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
                 echo "Installing Xrdp now..."
                 2.0
                     # Install xrdp and ssl-cert packages
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+sudo apt-get update
 (
   echo "XXX"
   echo "Installing ssl-cert..."
   echo "XXX"
   sudo apt-get install ssl-cert -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-  echo "XXX"
-  echo "Installation complete."
-  echo "XXX"
 ) | dialog --title "Installing ssl-cert" --gauge "Please wait..." 10 60 0
 (
   echo "XXX"
@@ -826,119 +792,6 @@ echo "Success! Xrdp is installed."
 sleep 4.0
                     ;;
                 7)
-                    # Install necessary packages
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
-sudo apt-get install -y adduser libfontconfig1
-
-# Get user input for IP address and SSL certificates
-exec 3>&1
-values=$(dialog --ok-label "Install" --backtitle "Grafana Installation" --title "Installation Wizard" \
---form "\nEnter the following details:" 15 50 0 \
-"IP Address:" 1 1 "" 1 20 30 0 \
-".crt File Path:" 2 1 "" 2 20 30 0 \
-".key File Path:" 3 1 "" 3 20 30 0 \
-2>&1 1>&3)
-exitcode=$?
-exec 3>&-
-if [ $exitcode -ne 0 ]; then
-  echo "Installation canceled."
-  exit 1
-fi
-
-grafana_ip=$(echo "$values" | awk 'NR==1{print $1}')
-grafana_crt=$(echo "$values" | awk 'NR==2{print $1}')
-grafana_key=$(echo "$values" | awk 'NR==3{print $1}')
-
-# Create a directory for SSL certificates
-sudo mkdir /etc/grafana/ssl/
-
-# Copy SSL certificates to the directory
-sudo cp $grafana_crt /etc/grafana/ssl/
-sudo cp $grafana_key /etc/grafana/ssl/
-
-# Change ownership of the SSL certificates
-sudo chown -R grafana:grafana /etc/grafana/ssl/
-
-# Configure Grafana to use SSL and listen on port 443
-sudo sed -i '/;protocol = http/a protocol = https\nhttp_port = 443\nhttps_port = 443\nssl_cert_path = /etc/grafana/ssl/'$(basename $grafana_crt)'\nssl_key_path = /etc/grafana/ssl/'$(basename $grafana_key)'' /etc/grafana/grafana.ini
-
-# Configure Grafana to listen on the specified IP address
-sudo sed -i '/;http_addr =/c http_addr = '${grafana_ip}'' /etc/grafana/grafana.ini
-
-# Enable and start Grafana service
-sudo systemctl enable grafana-server.service
-sudo systemctl start grafana-server.service
-
-# Output instructions to access Grafana
-dialog --backtitle "Grafana Installation" --title "Installation Complete" \
---msgbox "Grafana has been successfully installed and configured.\n\nYou can access Grafana at https://${grafana_ip}:443" 10 50
-                    ;;
-####################################################################################################                    
-                8)
-                    # Install necessary packages
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get install -y apache2 libapache2-mod-php7.4 php7.4-cli php7.4-mysql php7.4-gd php7.4-mbstring php7.4-xml php7.4-curl php7.4-bcmath php7.4-zip mariadb-server mariadb-client git unzip mysql-server 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Installing Packages" --gauge "Please wait..." 10 60 0
-# Set up database
-dbname=$(dialog --inputbox "Enter database name:" 0 0 2>&1 >/dev/tty)
-dbuser=$(dialog --inputbox "Enter database user:" 0 0 2>&1 >/dev/tty)
-dbpass=$(dialog --passwordbox "Enter database password:" 0 0 2>&1 >/dev/tty)
-dbhost=$(dialog --inputbox "Enter database host (optional):" 0 0 2>&1 >/dev/tty)
-sudo mysql -e "CREATE DATABASE $dbname;"
-sudo mysql -e "GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'$dbhost' IDENTIFIED BY '$dbpass';"
-
-# Download and set up Snipe IT
-sudo rm -rf /var/www/snipe-it
-sudo git clone https://github.com/snipe/snipe-it /var/www/snipe-it
-cd /var/www/snipe-it
-sudo git checkout tags/v5.2.2
-sudo cp .env.example .env
-sudo composer install --no-dev --prefer-source
-sudo php artisan key:generate --force
-sudo sed -i "s|DB_DATABASE=snipeit|DB_DATABASE=$dbname|g" .env
-sudo sed -i "s|DB_USERNAME=snipeit|DB_USERNAME=$dbuser|g" .env
-sudo sed -i "s|DB_PASSWORD=snipeit|DB_PASSWORD=$dbpass|g" .env
-sudo sed -i "s|APP_URL=http://localhost|APP_URL=https://localhost|g" .env
-
-# Set up SSL
-certfile=$(dialog --filedialog "Select SSL certificate file:" 0 0 2>&1 >/dev/tty)
-keyfile=$(dialog --filedialog "Select SSL key file:" 0 0 2>&1 >/dev/tty)
-sudo mkdir -p /etc/apache2/ssl
-sudo cp "$certfile" /etc/apache2/ssl/snipe-it.crt
-sudo cp "$keyfile" /etc/apache2/ssl/snipe-it.key
-sudo sed -i 's|<VirtualHost \*:80>|<VirtualHost \*:443>\n    SSLEngine on\n    SSLCertificateFile /etc/apache2/ssl/snipe-it.crt\n    SSLCertificateKeyFile /etc/apache2/ssl/snipe-it.key\n</VirtualHost>|g' /etc/apache2/sites-available/000-default.conf
-
-# Set up Apache
-sudo a2enmod rewrite
-sudo a2enmod ssl
-sudo systemctl restart apache2
-
-# Set file permissions
-sudo chown -R www-data:www-data /var/www/snipe-it/public/
-sudo chown -R www-data:www-data /var/www/snipe-it/storage/
-sudo chmod -R 755 /var/www/snipe-it/public/
-sudo chmod -R 755 /var/www/snipe-it/storage/
-
-# Display message box
-dialog --msgbox "Snipe IT has been successfully installed. The web files are located in /var/www/snipe-it/public/" 0 0
-                    ;;
-####################################################################################################                    
-                9) 
-# Install Samba and ncurses-based configuration tool
 # Define the title and message for the dialog box
 TITLE="Samba Service Installation"
 MESSAGE="Welcome to the Samba service installation script"
@@ -947,7 +800,7 @@ MESSAGE="Welcome to the Samba service installation script"
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 (
   echo "XXX"
-  echo "Installing Apache..."
+  echo "Installing Samba..."
   echo "XXX"
   sudo apt-get install -y samba 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
   echo "XXX"
@@ -1008,123 +861,9 @@ rm /tmp/samba-conf.tmp /tmp/samba-user.tmp
 dialog --backtitle "Samba Setup" --title "Samba Setup Complete" --msgbox "Samba has been set up with the following configuration:\n\nShare Name: $SHARENAME\nShare Path: $SHAREPATH\nBrowsable: $BROWSABLE\nGuest Access: $GUESTACCESS\n\nUser $SAMBAUSER has been added to Samba." 12 60
                     ;;
 ####################################################################################################                    
-                10)
-# Define the title and message for the dialog box
-TITLE="Enter Domain Name"
-MESSAGE="Please enter a domain name:"
-
-# Display a dialog box prompting the user to enter a domain name
-domain_name=$(dialog --title "$TITLE" --inputbox "$MESSAGE" 8 60 2>&1 >/dev/tty)
-
-# Display the value of the domain_name variable
-echo "Domain name entered: $domain_name"
-# Install Apache
-sudo apt-get update
-# Install Apache and display a status bar
-(
-  echo "XXX"
-  echo "Installing Apache..."
-  echo "XXX"
-  sudo apt-get install -y apache2 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-  echo "XXX"
-  echo "Installation complete."
-  echo "XXX"
-) | dialog --title "Installing Apache" --gauge "Please wait..." 10 60 0
-
-# Install apt-mirror
-# Install Apt-Mirror and display a status bar
-(
-  echo "XXX"
-  echo "Installing Aapt-Mirror..."
-  echo "XXX"
-  sudo apt-get install -y apt-mirror 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-  echo "XXX"
-  echo "Installation complete."
-  echo "XXX"
-) | dialog --title "Installing Apt-mirror" --gauge "Please wait..." 10 60 0
-
-# Backup original configuration file
-sudo cp /etc/apt/mirror.list /etc/apt/mirror.list.original
-
-# Create new configuration file with Ubuntu updates
-echo "############# Ubuntu Main Repos" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy main restricted" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-updates main restricted" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy universe" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-updates universe" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy multiverse" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-updates multiverse" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -sc) jammy-security main restricted" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -sc) jammy-security universe" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -sc) jammy-security multiverse" | sudo tee -a /etc/apt/mirror.list
-#echo " $(lsb_release -sc)" | sudo tee -a /etc/apt/mirror.list
-echo "############# Ubuntu Partner Repo" | sudo tee -a /etc/apt/mirror.list
-echo "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" | sudo tee -a /etc/apt/mirror.list
-
-# Create Var Directory
-sudo mkdir /var/www/$domain_name
-# Create symbolic link in Apache web files
-sudo ln -s /var/spool/apt-mirror/mirror/archive.ubuntu.com/ubuntu /var/www/$domain_name/
-
-# Create virtual host configuration file
-echo "<VirtualHost *:80>" | sudo tee /etc/apache2/sites-available/$domain_name.conf
-echo "    ServerName $domain_name" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-echo "    ServerAlias www.$domain_name" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-echo "    DocumentRoot /var/www/$domain_name" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-echo "    <Directory /var/www/$domain_name>" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-echo "        AllowOverride All" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-echo "        Require all granted" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-echo "    </Directory>" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-echo "</VirtualHost>" | sudo tee -a /etc/apache2/sites-available/$domain_name.conf
-
-# Disable the default virtual host and enable the new one
-sudo a2dissite 000-default.conf
-sudo a2ensite $domain_name.conf
-
-# Restart Apache
-sudo service apache2 restart
-
-# Update the mirror
-sudo apt-mirror
-
-echo "Apache web server is installed and apt-mirror is set up with Ubuntu updates. A symbolic link has been created in /var/www/$domain_name. The server is now only accessible at http://$domain_name/".
-sleep 5.0
-                    ;;
-####################################################################################################
-                11)
-                    # Install Apache and OpenSSL
-sudo apt-get update
-sudo apt-get install -y apache2 openssl
-
-# Ask user for SSL certificate and key file paths
-read -p "Enter the path to your SSL certificate (.crt): " CERT_FILE
-read -p "Enter the path to your SSL key file (.key): " KEY_FILE
-
-# Copy the SSL certificate and key files to the correct locations
-sudo cp "$CERT_FILE" /etc/ssl/certs/
-sudo cp "$KEY_FILE" /etc/ssl/private/
-
-# Configure Apache for SSL
-sudo a2enmod ssl
-sudo a2ensite default-ssl.conf
-
-# Restart Apache
-sudo systemctl restart apache2
-
-# Install kiwix-tools
-sudo apt-get install -y kiwix-tools
-
-# Download a ZIM file (replace with your own ZIM file URL)
-sudo kiwix-manage /var/www/html/library.xml add "https://download.kiwix.org/zim/wikipedia_en_all_nopic_2022-02.zim"
-
-# Enable directory listing for the ZIM files directory
-sudo sed -i 's/Options Indexes FollowSymLinks/Options +Indexes +FollowSymLinks/' /etc/apache2/apache2.conf
-sudo systemctl restart apache2
-                    ;;
-####################################################################################################
-                12)
+                8)
                     exit
                     ;;
+####################################################################################################
             esac
         done

@@ -27,12 +27,7 @@ dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
             clear
 sudo add-apt-repository ppa:unit193/encryption -y
 # Update the package list
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+sudo apt-get update
 # Install Veracrypt
 (
   echo "XXX"
@@ -42,13 +37,11 @@ sudo add-apt-repository ppa:unit193/encryption -y
   echo "XXX"
   echo "Installation complete."
   echo "XXX"
+echo "The Tor proxy port is: $torproxyport for this server"
 ) | dialog --title "Installing Veracrypt" --gauge "Please wait..." 10 60 0
-        # Define the title and message for the dialog box
-TITLE="Veracrypt Installation Complete"
-MESSAGE="Success! Veracrypt is now installed to the system"
-
-# Display a dialog box with the welcome message
-dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
+clear
+echo "Veracrypt is installed!"
+sleep 4.0
             ;;
         2)
             exit

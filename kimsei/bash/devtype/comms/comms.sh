@@ -3,8 +3,7 @@ while true; do
     # Define menu options
     OPTIONS=(1 "Install VoIP Server (Mumble)"
              2 "Install IRC Server WIP"
-             3 "Element Server WIP"
-             4 "back")
+             3 "back")
 
     # Get menu selection
     CHOICE=$(dialog --clear \
@@ -25,15 +24,9 @@ MESSAGE="Welcome to the VoIP server installation script"
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
 clear
 #Updating Repositories (0/1)
-(
-  echo "XXX"
-  echo "Updating Repositories..."
-  echo "XXX"
-  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
-  echo "XXX"
-  echo "Installation complete."
-  echo "XXX"
-) | dialog --title "Updating Repositories" --gauge "Please wait..." 10 60 0
+echo "Updating repositories now"
+sleep 0.3
+sudo apt-get update -y
 #Updating Repositories (1/1)
 #Installing Mumble (0/3)
 clear
@@ -54,7 +47,7 @@ voipip=$(dialog --clear --inputbox "Enter the VoIP IP:" 10 40 3>&1 1>&2 2>&3)
 voipport=$(dialog --clear --inputbox "Enter the VoIP port (default is 64738):" 10 40 3>&1 1>&2 2>&3)
 voipbandwidth=$(dialog --clear --inputbox "Enter the bandwidth for voice (72,000-356,000 Kbits):" 10 40 3>&1 1>&2 2>&3)
 voipusers=$(dialog --clear --inputbox "Enter the max amount of VoIP users:" 10 40 3>&1 1>&2 2>&3)
-voiplog=$(dialog --clear --inputbox "Enter the VoIP groups:" 10 40 3>&1 1>&2 2>&3)
+voiplog=$(dialog --clear --inputbox "Enter the amount of days to keep logs. (-1 will keep no logs):" 10 50 3>&1 1>&2 2>&3)
 #Installing Mumble (2/3)
 sleep 0.3
 clear
@@ -450,143 +443,38 @@ MESSAGE="The VoIP is succesfully installed! Go to this IP:$voipport on the Mumbl
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
             ;;
         2)
-        clear
-        echo "Welcome to the IRC server installation"
-        sleep 3.0
-        echo "Starting now..."
-        sleep 1.0
-        clear
-# Prompt user for information needed to configure IRC server
-echo "Please provide the following information to configure the IRC server:"
-read -p "Enter the server name (e.g. irc.example.com): " server_name
-read -p "Enter the server description: " server_desc
-read -p "Enter the IP address for the IRC server to run on: " server_ip
-read -p "Enter the port number for the IRC server to listen on: " server_port
-read -s -p "Enter a password for the IRC server: " server_password
-echo ""
+# Welcome
+TITLE="IRC Service Installation"
+MESSAGE="Welcome to the IRC service installation using ircd-hybrid"
 
-# Install necessary packages
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
+# Install IRC server
 sudo apt-get update
-sudo apt install -y ircd-hybrid
+sudo apt-get install ircd-hybrid
 
-# Edit configuration file
-sudo sed -i "s/^.*servername.*$/servername = \"$server_name\";/" /etc/ircd-hybrid/ircd.conf
-sudo sed -i "s/^.*network-name.*$/network-name = \"$server_desc\";/" /etc/ircd-hybrid/ircd.conf
-sudo sed -i "s/^.*listen.*$/listen = \"$server_ip $server_port\";/" /etc/ircd-hybrid/ircd.conf
-sudo sed -i "/^.*password.*$/d" /etc/ircd-hybrid/ircd.conf # Remove any existing password line
-echo "password \"$server_password\";" | sudo tee -a /etc/ircd-hybrid/ircd.conf # Add password line
+# Prompt user for IP address and port number
+IP=$(dialog --inputbox "Enter IP address" 8 50 --stdout)
+PORT=$(dialog --inputbox "Enter port number" 8 50 --stdout)
 
-# Start the server
-sudo systemctl start ircd-hybrid
-sudo systemctl enable ircd-hybrid
+# Prompt user for number of users
+USERS=$(dialog --inputbox "Enter number of users" 8 50 --stdout)
 
-# Print out information about the server
-echo "IRC server configured successfully!"
-echo "Server name: $server_name"
-echo "Server description: $server_desc"
-echo "IP address for IRC server to run on: $server_ip"
-echo "Port number for IRC server to listen on: $server_port"
-echo "Password set for the server."
-sleep 7.0
+# Prompt user for password
+PASSWORD=$(dialog --passwordbox "Enter password" 8 50 --stdout)
+
+# Add configuration options to config file
+sudo sed -i "s/^listen.*$/listen $IP:$PORT/g" /etc/ircd-hybrid/ircd.conf
+sudo sed -i "s/^maxclients.*$/maxclients = $USERS/g" /etc/ircd-hybrid/ircd.conf
+sudo sed -i "s/^password.*$/password = \"$PASSWORD\"/g" /etc/ircd-hybrid/ircd.conf
+
+# Restart IRC server
+sudo service ircd-hybrid restart
+
+# Display success message with user inputs
+dialog --title "Installation Complete" --msgbox "IRC server installed and configured successfully!\n\nIP address: $IP\nPort number: $PORT\nMaximum users: $USERS" 10 60
             ;;
         3)
-        clear
-        echo "Welcome to the Element server installation"
-        sleep 3.0
-        echo "Installing now..."
-# Update system packages
-sudo apt-get update -y
-
-# Install necessary packages
-sudo apt install -y nodejs npm nginx certbot python3-certbot-nginx
-
-# Clone Element repository
-git clone https://github.com/vector-im/element-web.git
-
-# Install Element dependencies
-cd element-web
-npm install
-
-# Build Element
-npm run build
-
-# Get domain name from user
-read -p "Enter the domain name for your Element server: " domain_name
-
-# Configure Nginx
-sudo mv /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
-sudo tee /etc/nginx/sites-available/element-web <<EOF
-server {
-    listen 80;
-    server_name ${domain_name};
-
-    location / {
-        return 301 https://\$server_name\$request_uri;
-    }
-}
-
-server {
-    listen 443 ssl;
-    server_name ${domain_name};
-
-    ssl_certificate /etc/letsencrypt/live/${domain_name}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${domain_name}/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-
-    location / {
-        root /home/${USER}/element-web;
-        index index.html;
-        try_files \$uri /index.html;
-    }
-
-    location /_matrix {
-        proxy_pass http://127.0.0.1:8008;
-        proxy_set_header X-Forwarded-For \$remote_addr;
-        proxy_set_header Host \$http_host;
-    }
-
-    location /_synapse {
-        proxy_pass http://127.0.0.1:8008;
-        proxy_set_header X-Forwarded-For \$remote_addr;
-        proxy_set_header Host \$http_host;
-    }
-
-    location ^~ /_matrix/client/ {
-        proxy_pass http://127.0.0.1:8008;
-        proxy_set_header X-Forwarded-For \$remote_addr;
-        proxy_set_header Host \$http_host;
-    }
-
-    location ^~ /_matrix/media/ {
-        proxy_pass http://127.0.0.1:8008;
-        proxy_set_header X-Forwarded-For \$remote_addr;
-        proxy_set_header Host \$http_host;
-    }
-}
-EOF
-sudo ln -s /etc/nginx/sites-available/element-web /etc/nginx/sites-enabled/
-sudo systemctl reload nginx
-
-# Configure Element
-cd /home/${USER}/element-web/config
-cp config.sample.json config.json
-sudo sed -i "s|\"defaultUrl\": \"https://matrix.org\",|\"defaultUrl\": \"https://${domain_name}\",|" config.json
-sudo sed -i 's/"disable_identity_server": false,/"disable_identity_server": true,/' config.json
-sudo sed -i "s|\"_base_url\": \"https://localhost:8448\",|\"_base_url\": \"https://${domain_name}\",|" config.json
-
-# Generate SSL certificate with Certbot
-sudo certbot --nginx -d ${domain_name} --agree-tos -m ${user_email}
-
-# Start Element
-cd /home/${USER}/element-web
-npm start
-
-echo "Element server setup complete!"
-
-echo "Element server setup complete!"
-sleep 5.0
-            ;;
-        4)
             exit
             ;;
     esac

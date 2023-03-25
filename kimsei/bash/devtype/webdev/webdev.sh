@@ -1,11 +1,8 @@
 #!/bin/bash
- OPTIONS=(1 "Apache Web Server (SSL)"
-          2 "Nginx Web Server WIP (SSL)"
+ OPTIONS=(1 "Apache Web Server (Certbot SSL)"
+          2 "Apache Web Server (User SSL)"
           3 "Apache Web Server (No SSL)"
-          4 "Nginx Web Server WIP (No SSL)"
-          5 "Apache Web Server (User SSL)"
-          6 "Coming Soon"
-          7 "Back")
+          4 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Webdev" \
@@ -17,21 +14,37 @@
             # Process menu selection
             case $CHOICE in
                 1)
-                    clear
-echo "Welcome to Kimsei's automatic Web/SSL configurator"
-echo "Disclaimer: Please have your DNS A/AAAA records in order for your domain. This script will not work unless you have proper DNS configuration beforehand!"
-sleep 3.0
-echo "Initializing script..."
-sleep 0.7
-clear
-# AGet variables for domain and email
-read -p "Enter your domain name: " domain
-read -p "Enter your email address: " email
+# display welcome message
+dialog --msgbox "Welcome to Kimsei's automatic Web/SSL configurator" 10 50
+
+# display disclaimer message
+dialog --msgbox "Disclaimer: Please have your DNS A/AAAA records in order for your domain. This script will not work unless you have proper DNS configuration beforehand!" 10 70
+
+# prompt user for domain name
+domain=$(dialog --inputbox "Enter your domain name:" 10 50 3>&1 1>&2 2>&3)
+
+# prompt user for email address
+email=$(dialog --inputbox "Enter your email address:" 10 50 3>&1 1>&2 2>&3)
 
 # Install Apache2 web server
-sudo apt-get update
-sudo apt-get install apache2 -y
-
+if ! dpkg -l | grep -q apache2; then
+  # install Apache2
+(
+echo "XXX"
+echo "Updating System Packages..."
+echo "XXX"
+sudo apt-get update 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating System Packages" --gauge "Please wait..." 10 60 0
+(
+echo "XXX"
+echo "Installing Apache2..."
+echo "XXX"
+sudo apt-get install -y apache2 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+echo "XXX"
+echo "Installation complete."
+echo "XXX"
+) | dialog --title "Installing Apache2" --gauge "Please wait..." 10 60 0
+fi
 # Create virtual host configuration file for $domain
 sudo cat > /etc/apache2/sites-available/$domain.conf <<EOF
 <VirtualHost *:80>
@@ -68,179 +81,140 @@ sudo a2ensite $domain.conf
 sudo systemctl restart apache2
 
 # Install Certbot for SSL
-sudo apt-get update
-sudo apt-get install certbot python3-certbot-apache -y
-
+if ! dpkg -l | grep -q certbot && ! dpkg -l | grep -q python3-certbot-apache; then
+# install Certbot and Apache plugin
+(
+echo "XXX"
+echo "Installing Certbot..."
+echo "XXX"
+sudo apt-get install certbot 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Installing Certbot" --gauge "Please wait..." 10 60 0
+(
+echo "XXX"
+echo "Installing Python3-certbot-apache..."
+echo "XXX"
+sudo apt-get install -y Python3-certbot-apache 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+echo "XXX"
+echo "Installation complete."
+echo "XXX"
+) | dialog --title "Installing Python3-certbot-apache" --gauge "Please wait..." 10 60 0
+fi
 # Obtain SSL certificate for $domain
 sudo certbot --apache -d $domain -d $domain --non-interactive --agree-tos --email $email
+# Complete
+dialog --msgbox "Success! Your new website should be available at $domain! You can go to /var/www/html/$domain to change the web page files." 10 70
 #######################################################################
                     ;;
                 2)
-                    clear
-# Prompt user to enter email and domain name
-read -p "Enter your email address: " email
-read -p "Enter your domain name: " domain
+# display welcome message
+dialog --msgbox "Welcome to Kimsei's automatic Web/SSL configurator" 10 50
+# Install Apache2 web server
+if ! dpkg -l | grep -q apache2; then
+  # install Apache2
+(
+  echo "XXX"
+  echo "Updating System Packages..."
+  echo "XXX"
+  sudo apt-get update 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating System Packages" --gauge "Please wait..." 10 60 0
+(
+  echo "XXX"
+  echo "Installing Apache2..."
+  echo "XXX"
+  sudo apt-get install -y apache2 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Apache2" --gauge "Please wait..." 10 60 0
+fi
+# Get domain name from user
+domain=$(dialog --inputbox "Enter your domain name:" 10 50 3>&1 1>&2 2>&3)
 
-# Update package list and install Nginx
-sudo apt-get update
-sudo apt-get install nginx -y
+# Get SSL certificate and key file paths from user
+# prompt user for .crt file path
+crt_path=$(dialog --inputbox "Enter the path to your .crt file:" 10 50 3>&1 1>&2 2>&3)
 
-# Set up basic Nginx server block with user-provided domain name
-sudo bash -c "cat > /etc/nginx/sites-available/$domain <<EOF
-server {
-    listen 80;
-    listen [::]:80;
-    server_name $domain;
-    return 301 https://\$server_name\$request_uri;
-}
-server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    server_name $domain;
-    ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
-    include /etc/nginx/snippets/ssl-params.conf;
-    root /var/www/html;
-    index index.html index.htm;
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
-EOF"
+# prompt user for .key file path
+key_path=$(dialog --inputbox "Enter the path to your .key file:" 10 50 3>&1 1>&2 2>&3)
 
-# Create a symbolic link for the Nginx server block
-sudo ln -s /etc/nginx/sites-available/$domain /etc/nginx/sites-enabled/
+# Create Apache virtual host configuration file
+cat << EOF > /etc/apache2/sites-available/$domain.conf
+<VirtualHost *:80>
+    ServerName $domain
+    Redirect permanent / https://$domain/
+</VirtualHost>
 
-# Remove default Nginx server block
-sudo rm /etc/nginx/sites-enabled/default
+<VirtualHost *:443>
+    ServerName $domain
+    SSLEngine on
+    SSLCertificateFile $crt_path
+    SSLCertificateKeyFile $key_path
+    DocumentRoot /var/www/html/$domain
+</VirtualHost>
+EOF
 
-# Restart Nginx to apply changes
-sudo systemctl restart nginx
+# Create website directory and index.html file
+mkdir /var/www/html/$domain
+echo "<html><body><h1>Welcome to $domain</h1></body></html>" > /var/www/html/$domain/index.html
 
-# Install Certbot
-sudo apt-get install certbot python3-certbot-nginx -y
+# Change ownership of website directory to user running the script
+chown -R $(whoami):$(whoami) /var/www/html/$domain
 
-# Obtain and install SSL/TLS certificate
-sudo certbot --nginx --agree-tos -m $email -d $domain -d www.$domain
-
-# Restart Nginx to apply changes
-sudo systemctl restart nginx
+# Enable site and SSL module, then restart Apache
+a2ensite $domain
+a2enmod ssl
+systemctl restart apache2
 #######################################################################
                     ;;
                 3)
-                    clear
-    echo "Welcome to Kimsei's automatic web configurator."
+# display welcome message
+dialog --msgbox "Welcome to Kimsei's automatic Web configurator" 10 50
 # Prompt user for domain name
-read -p "Enter domain name: " domain_name
+domain=$(dialog --inputbox "Enter your domain name:" 10 50 3>&1 1>&2 2>&3)
 # Install Apache web server
-apt-get update
+if ! dpkg -l | grep -q apache2; then
+# install Apache2
+(
+  echo "XXX"
+  echo "Updating System Packages..."
+  echo "XXX"
+  sudo apt-get update 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+) | dialog --title "Updating System Packages" --gauge "Please wait..." 10 60 0
+(
+  echo "XXX"
+  echo "Installing Apache2..."
+  echo "XXX"
+  sudo apt-get install -y apache2 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Apache2" --gauge "Please wait..." 10 60 0
+fi
 apt-get install apache2 -y
 # Create directory for domain and set permissions
-mkdir /var/www/$domain_name
-chown -R www-data:www-data /var/www/$domain_name
-chmod -R 755 /var/www/$domain_name
+mkdir /var/www/$domain
+chown -R www-data:www-data /var/www/$domain
+chmod -R 755 /var/www/$domain
 # Create virtual host file for domain
-cat > /etc/apache2/sites-available/$domain_name.conf << EOF
+cat > /etc/apache2/sites-available/$domain.conf << EOF
 <VirtualHost *:80>
-    ServerName $domain_name
-    ServerAlias www.$domain_name
-    DocumentRoot /var/www/$domain_name
+    ServerName $domain
+    ServerAlias www.$domain
+    DocumentRoot /var/www/$domain
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 EOF
 # Enable the virtual host and restart Apache
-a2ensite $domain_name.conf
+a2ensite $domain.conf
 systemctl reload apache2
-echo "Your Apache web server is complete! visit the IP address of this machine or the domain name if you set up DNS."
-sleep 1.5
-#######################################################################
+# Complete
+dialog --msgbox "Success! Your new website should be available at $domain! You can go to /var/www/html/$domain to change the web page files." 10 70
                     ;;
+#######################################################################
                 4)
-                    clear
-    echo "Welcome to Kimsei's automatic web configurator."
-sleep 1.0
-# Prompt user for domain name
-read -p "Enter domain name: " domain_name
-
-# Install nginx web server
-apt-get update
-apt-get install nginx -y
-
-# Create directory for domain and set permissions
-mkdir /var/www/$domain_name
-chown -R www-data:www-data /var/www/$domain_name
-chmod -R 755 /var/www/$domain_name
-
-# Create virtual host file for domain
-cat > /etc/nginx/sites-available/$domain_name << EOF
-server {
-    listen 80;
-    listen [::]:80;
-
-    root /var/www/$domain_name;
-    index index.html index.htm index.nginx-debian.html;
-
-    server_name $domain_name www.$domain_name;
-
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
-EOF
-
-# Enable the virtual host and restart nginx
-ln -s /etc/nginx/sites-available/$domain_name /etc/nginx/sites-enabled/
-nginx -t
-systemctl reload nginx
-echo "Your Nginx web server is complete! visit the IP address of this machine or the domain name if you set up DNS."
-sleep 1.5
-                    ;;
-#######################################################################
-                5)
-                sudo apt install apache2 -y
-                    # Get domain name from user
-read -p "Enter domain name: " DOMAIN
-
-# Get SSL certificate and key file paths from user
-read -p "Enter path to SSL .crt file: " CRT_PATH
-read -p "Enter path to SSL .key file: " KEY_PATH
-
-# Create Apache virtual host configuration file
-cat << EOF > /etc/apache2/sites-available/$DOMAIN.conf
-<VirtualHost *:80>
-    ServerName $DOMAIN
-    Redirect permanent / https://$DOMAIN/
-</VirtualHost>
-
-<VirtualHost *:443>
-    ServerName $DOMAIN
-    SSLEngine on
-    SSLCertificateFile $CRT_PATH
-    SSLCertificateKeyFile $KEY_PATH
-    DocumentRoot /var/www/html/$DOMAIN
-</VirtualHost>
-EOF
-
-# Create website directory and index.html file
-mkdir /var/www/html/$DOMAIN
-echo "<html><body><h1>Welcome to $DOMAIN</h1></body></html>" > /var/www/html/$DOMAIN/index.html
-
-# Change ownership of website directory to user running the script
-chown -R $(whoami):$(whoami) /var/www/html/$DOMAIN
-
-# Enable site and SSL module, then restart Apache
-a2ensite $DOMAIN
-a2enmod ssl
-systemctl restart apache2
-                    ;;
-#######################################################################
-                6)
                     exit
                     ;;
-                7)
-                    exit
-                    ;;
-
+#######################################################################
             esac
         done
