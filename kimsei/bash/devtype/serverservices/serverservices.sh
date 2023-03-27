@@ -7,7 +7,8 @@
                      6 "XRDP"
                      7 "Samba Setup"
                      8 "Portainer (User SSL)"
-                     9 "Back")
+                     9 "SNMP"
+                     10 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -916,6 +917,54 @@ docker run -d \
                     ;;
 ####################################################################################################
                 9)
+dialog --title "SNMP Setup" --msgbox "Welcome to the SNMP installer!" 10 60
+# Install SNMP package
+(
+  echo "XXX"
+  echo "Updating System..."
+  echo "XXX"
+  sudo apt-get update -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "XXX"
+  sudo apt-get install -y snmp 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Samba packages" --gauge "Please wait..." 10 60 0
+
+# Get SNMP community string with user input
+SNMP_COMMUNITY=$(dialog --title "Set SNMP Community String" --inputbox "Enter the community string you want to use:" 10 60 3>&1 1>&2 2>&3)
+
+# Get SNMP system location with user input
+SNMP_LOCATION=$(dialog --title "Set SNMP System Location" --inputbox "Enter the location of the SNMP system:" 10 60 3>&1 1>&2 2>&3)
+
+# Get SNMP system contact with user input
+SNMP_CONTACT=$(dialog --title "Set SNMP System Contact" --inputbox "Enter the contact information for the SNMP system:" 10 60 3>&1 1>&2 2>&3)
+
+# Get SNMP IP address and port with user input
+DEFAULT_SNMP_PORT=161
+SNMP_IP=$(dialog --title "Set SNMP IP Address and Port" --inputbox "Enter the IP address and port for SNMP in the format \"ip_address:port\". The default port for SNMP is $DEFAULT_SNMP_PORT." 10 60 3>&1 1>&2 2>&3)
+if [[ $SNMP_IP == *:* ]]; then
+  SNMP_PORT=$(echo $SNMP_IP | awk -F: '{print $2}')
+  SNMP_IP=$(echo $SNMP_IP | awk -F: '{print $1}')
+else
+  SNMP_PORT=$DEFAULT_SNMP_PORT
+fi
+
+# Update SNMP configuration file with user input
+sudo sed -i "s/^#.*rocommunity.*$/rocommunity $SNMP_COMMUNITY/" /etc/snmp/snmpd.conf
+sudo sed -i "s/^sysLocation.*$/sysLocation $SNMP_LOCATION/" /etc/snmp/snmpd.conf
+sudo sed -i "s/^sysContact.*$/sysContact $SNMP_CONTACT/" /etc/snmp/snmpd.conf
+sudo sed -i "s/^agentAddress.*$/agentAddress udp:$SNMP_IP:$SNMP_PORT/" /etc/snmp/snmpd.conf
+
+# Start SNMP service
+sudo systemctl restart snmpd.service
+
+# Display success message
+dialog --title "SNMP Setup Complete" --msgbox "SNMP has been set up with community string $SNMP_COMMUNITY, system location $SNMP_LOCATION, system contact $SNMP_CONTACT, and IP address $SNMP_IP and port $SNMP_PORT." 10 60
+                  ;;
+####################################################################################################
+                10)
                   exit
                   ;;
             esac
