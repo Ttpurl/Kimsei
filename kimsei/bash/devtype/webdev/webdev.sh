@@ -106,14 +106,14 @@ dialog --msgbox "Success! Your new website should be available at $domain! You c
 # get user input for URL
 url=https://$domain
 
-# create QR code and save it to /tmp directory
-qrencode -o /tmp/qrcode.png $url
+# Generate a QR code for the URL using qrencode
+qrencode -t ansiutf8 "$url" > /tmp/qr-code.txt
 
-# display the QR code using dialog
-dialog --title "QR Code for $url" --backtitle "QR Code Generator" --ok-label "Close" --no-cancel --textbox /tmp/qrcode.png 0 0
+# Display the QR code for the URL using dialog
+dialog --title "QR Code for $url" --textbox /tmp/qr-code.txt 0 0
 
-# remove the QR code file from /tmp directory
-rm /tmp/qrcode.png
+# Remove temporary files
+rm /tmp/qr-code.txt
 #######################################################################
                     ;;
                 2)
@@ -179,14 +179,14 @@ dialog --msgbox "Success! Your new website should be available at $domain! You c
 # get user input for URL
 url=https://$domain
 
-# create QR code and save it to /tmp directory
-qrencode -o /tmp/qrcode.png $url
+# Generate a QR code for the URL using qrencode
+qrencode -t ansiutf8 "$url" > /tmp/qr-code.txt
 
-# display the QR code using dialog
-dialog --title "QR Code for $url" --backtitle "QR Code Generator" --ok-label "Close" --no-cancel --textbox /tmp/qrcode.png 0 0
+# Display the QR code for the URL using dialog
+dialog --title "QR Code for $url" --textbox /tmp/qr-code.txt 0 0
 
-# remove the QR code file from /tmp directory
-rm /tmp/qrcode.png
+# Remove temporary files
+rm /tmp/qr-code.txt
 #######################################################################
                     ;;
                 3)
@@ -236,14 +236,14 @@ dialog --msgbox "Success! Your new website should be available at $domain! You c
 # get user input for URL
 url=http://$domain
 
-# create QR code and save it to /tmp directory
-qrencode -o /tmp/qrcode.png $url
+# Generate a QR code for the URL using qrencode
+qrencode -t ansiutf8 "$url" > /tmp/qr-code.txt
 
-# display the QR code using dialog
-dialog --title "QR Code for $url" --backtitle "QR Code Generator" --ok-label "Close" --no-cancel --textbox /tmp/qrcode.png 0 0
+# Display the QR code for the URL using dialog
+dialog --title "QR Code for $url" --textbox /tmp/qr-code.txt 0 0
 
-# remove the QR code file from /tmp directory
-rm /tmp/qrcode.png
+# Remove temporary files
+rm /tmp/qr-code.txt
                     ;;
 #######################################################################
                 4)
