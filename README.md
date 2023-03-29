@@ -14,6 +14,8 @@ go into Kimsei/setup/:
 ```
 cd Kimsei/setup
 ```
+Make the setup.sh script executable
+```
 sudo chmod +x ./setup.sh
 ```
 Once this is done, run the setup script:
