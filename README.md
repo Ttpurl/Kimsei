@@ -26,7 +26,7 @@ By now, you will you be able to run the script. Leave the setup directory:
 ```
 cd ..
 ```
-Run this command to start Kimsei`
+Run this command to start Kimsei
 ```
 sudo ./kimsei.sh
 ```
