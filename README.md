@@ -10,7 +10,23 @@ Ubuntu with many services and automated scripts offered within this code.
 
 
 ### REQUIREMENTS ###
-go into kimsei/setup/ and run sudo chmod +x ./setup.sh . Once this is done, run the setup script and you will then be able to run the script perfectly fine by running sudo ./kimsei.sh.
-
+go into Kimsei/setup/:
+```
+cd Kimsei/setup
+```
+sudo chmod +x ./setup.sh
+```
+Once this is done, run the setup script:
+```
+sudo ./setup.sh
+```
+By now, you will you be able to run the script. Leave the setup directory:
+```
+cd ..
+```
+Run this command to start Kimsei`
+```
+sudo ./kimsei.sh.
+```
 ### License ###
 [GNU General Public License v3.0](LICENSE.txt)
