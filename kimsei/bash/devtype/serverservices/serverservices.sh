@@ -9,7 +9,8 @@
                      8 "Portainer (User SSL)"
                      9 "SNMP"
                      10 "DHCP Server"
-                     11 "Back")
+                     11 "Jellyfin (User SSL)"
+                     12 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -642,15 +643,11 @@ MESSAGE="Welcome to the Jellyfin installation script"
 
 # Display a dialog box with the welcome message
 dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
-sleep 1.0
-echo "Updating system now"
-sleep 0.5
-sudo apt-get update -y
 (
   echo "XXX"
   echo "Installing apt-transport-https..."
   echo "XXX"
-  sudo apt-get install apt-transport-https -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  sudo apt-get update -y && sudo apt-get install apt-transport-https -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
   echo "XXX"
   echo "Installation complete."
   echo "XXX"
@@ -1029,9 +1026,58 @@ rm /tmp/dhcp-config.tmp
 
 # Display a success message to the user
 dialog --title "DHCP Configuration Complete" --msgbox "DHCP configuration has been completed successfully." 10 50
-
                   ;;
                 11)
+# Define the title and message for the dialog box
+TITLE="Jellyfin Server Installer"
+MESSAGE="Welcome to the Jellyfin installation script"
+
+# Display a dialog box with the welcome message
+dialog --title "$TITLE" --msgbox "$MESSAGE" 8 60
+(
+  echo "XXX"
+  echo "Installing apt-transport-https..."
+  echo "XXX"
+  sudo apt-get update -y && sudo apt-get install apt-transport-https -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing apt-transport-https" --gauge "Please wait..." 10 60 0
+wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | sudo apt-key add -
+echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | sudo tee /etc/apt/sources.list.d/jellyfin.list
+sudo apt update
+(
+  echo "XXX"
+  echo "Installing Jellyfin..."
+  echo "XXX"
+  sudo apt-get install jellyfin -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing Jellyfin" --gauge "Please wait..." 10 60 0
+# Ask user for SSL certificate and key
+dialog --title "SSL Setup" --msgbox "Please provide the path to your SSL certificate and key." 8 60
+crt=$(dialog --stdout --title "Certificate Path" --inputbox "Certificate path:" 8 60)
+key=$(dialog --stdout --title "Key Path" --inputbox "Key path:" 8 60)
+
+# Check if certificate and key files exist
+if [[ ! -f $crt ]] || [[ ! -f $key ]]; then
+  dialog --title "Error" --msgbox "The specified certificate or key file does not exist." 8 60
+  exit 1
+fi
+
+# Configure SSL for Jellyfin
+sed -i "s/#HttpsPortNumber = 8920/HttpsPortNumber = 443/" /etc/jellyfin/jellyfin.conf
+sed -i "s/#HttpsCertificatePath=/HttpsCertificatePath=$crt/" /etc/jellyfin/jellyfin.conf
+sed -i "s/#HttpsKeyPath=/HttpsKeyPath=$key/" /etc/jellyfin/jellyfin.conf
+
+# Restart Jellyfin
+systemctl restart jellyfin
+
+# Display confirmation message
+dialog --title "Setup Complete" --msgbox "Jellyfin and SSL have been set up successfully." 8 60
+                  ;;
+                12)
                   exit
                   ;;
             esac
