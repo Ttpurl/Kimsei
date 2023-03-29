@@ -8,7 +8,8 @@
                      7 "Samba Setup"
                      8 "Portainer (User SSL)"
                      9 "SNMP"
-                     10 "Back")
+                     10 "DHCP Server"
+                     11 "Back")
 
             CHOICE=$(dialog --clear \
                             --title "Server Services" \
@@ -965,6 +966,72 @@ dialog --title "SNMP Setup Complete" --msgbox "SNMP has been set up with communi
                   ;;
 ####################################################################################################
                 10)
+# Use dialog to prompt user to select network device
+device=$(dialog --backtitle "DHCP Configuration" --title "Select Network Device" \
+--menu "Select the network device you want to run DHCP on:" 10 50 3 \
+$(ls /sys/class/net) \
+2>&1 >/dev/tty)
+
+# Use dialog to prompt user for DHCP configuration settings
+dialog --backtitle "DHCP Configuration" --title "DHCP Configuration Settings" \
+--form "Enter the following DHCP configuration settings for $device:" 18 60 9 \
+"Subnet:" 1 1 "" 1 25 18 0 \
+"Netmask:" 2 1 "" 2 25 18 0 \
+"Start IP:" 3 1 "" 3 25 18 0 \
+"End IP:" 4 1 "" 4 25 18 0 \
+"Default Gateway:" 5 1 "" 5 25 18 0 \
+"DNS Server:" 6 1 "" 6 25 18 0 \
+"NTP Server:" 7 1 "" 7 25 18 0 \
+2>/tmp/dhcp-config.tmp
+
+# Parse the user's input and assign it to variables
+subnet=$(sed -n 1p /tmp/dhcp-config.tmp)
+netmask=$(sed -n 2p /tmp/dhcp-config.tmp)
+start_ip=$(sed -n 3p /tmp/dhcp-config.tmp)
+end_ip=$(sed -n 4p /tmp/dhcp-config.tmp)
+default_gateway=$(sed -n 5p /tmp/dhcp-config.tmp)
+dns_server=$(sed -n 6p /tmp/dhcp-config.tmp)
+ntp_server=$(sed -n 7p /tmp/dhcp-config.tmp)
+
+# Install the dhcpd package if it is not already installed
+if ! command -v dhcpd &> /dev/null
+then
+    sudo apt-get update && sudo apt-get install -y dhcpd
+    (
+  echo "XXX"
+  echo "Updating System..."
+  echo "XXX"
+  sudo apt-get update && sudo apt-get install dhcpd -y 2>&1 | awk '!/^(Reading|Unpacking)/{print "XXX\n"$0"\nXXX"}'
+  echo "XXX"
+  echo "Installation complete."
+  echo "XXX"
+) | dialog --title "Installing dhcpd" --gauge "Please wait..." 10 60 0
+fi
+
+# Write the DHCP configuration file
+sudo bash -c "cat > /etc/dhcp/dhcpd.conf" << EOF
+subnet $subnet netmask $netmask {
+    range $start_ip $end_ip;
+    option routers $default_gateway;
+    option domain-name-servers $dns_server;
+    option ntp-servers $ntp_server;
+}
+EOF
+
+# Set the DHCP server to listen on the selected network device
+sudo sed -i "s/INTERFACESv4=\"\"/INTERFACESv4=\"$device\"/g" /etc/default/isc-dhcp-server
+
+# Restart the dhcpd service
+sudo systemctl restart isc-dhcp-server
+
+# Remove the temporary file
+rm /tmp/dhcp-config.tmp
+
+# Display a success message to the user
+dialog --title "DHCP Configuration Complete" --msgbox "DHCP configuration has been completed successfully." 10 50
+
+                  ;;
+                11)
                   exit
                   ;;
             esac
