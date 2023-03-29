@@ -28,7 +28,7 @@ cd ..
 ```
 Run this command to start Kimsei`
 ```
-sudo ./kimsei.sh.
+sudo ./kimsei.sh
 ```
 ### License ###
 [GNU General Public License v3.0](LICENSE.txt)
